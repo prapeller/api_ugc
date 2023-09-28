@@ -27,7 +27,7 @@ async def user_film_progress_create(
 
 
 @router.get('/{film_id}')
-async def user_film_progress_create(
+async def user_film_progress(
         film_id: str,
         user_id: str = fa.Depends(get_current_user_id_dependency),
 ):
