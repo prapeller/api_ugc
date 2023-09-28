@@ -8,6 +8,7 @@ Because
 All these separate technologies better to use in separate service, rather than create multi-technology service
 
 prove of mongo vs postgres READ comparison:
+- > cp .envs/.example .envs/.local
 - > cd mongo_vs_postgres
 - > python3.11 -m venv venv
 - > source venv/bin/activate

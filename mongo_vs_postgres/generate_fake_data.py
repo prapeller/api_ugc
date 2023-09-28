@@ -7,7 +7,7 @@ import psycopg2
 from faker import Faker
 from pymongo import MongoClient, ASCENDING
 
-from config import postgres_settings
+from config import postgres_settings, mongo_settings
 
 fake = Faker()
 
@@ -399,22 +399,22 @@ def mongo_insert_user_ratings_bookmarks(db, batch_size):
 
 if __name__ == '__main__':
     # create fake data in postgres
-    # insert_users()
-    # insert_films()
-    # insert_user_film_rating()
-    # insert_user_film_comment()
-    # insert_user_comment_like()
-    # insert_user_film_bookmark()
+    insert_users()
+    insert_films()
+    insert_user_film_rating()
+    insert_user_film_comment()
+    insert_user_comment_like()
+    insert_user_film_bookmark()
 
     # etl this data to mongo
-    mongo_client = MongoClient('mongodb://127.0.0.1:27017')
-    db = mongo_client['mongo_db']
+    mongo_client = MongoClient(f'mongodb://{mongo_settings.MONGO_HOST}:{mongo_settings.MONGO_PORT}')
+    db = mongo_client[f'{mongo_settings.MONGO_DB}']
 
-    # mongo_insert_comment_likes(db, batch_size=100000)
-    # mongo_insert_user_ratings_bookmarks(db, batch_size=100000)
-    #
-    # mongo_insert_film_avg_ratings(db, batch_size=1000)
-    # mongo_insert_film_comments(db, batch_size=1000)
+    mongo_insert_comment_likes(db, batch_size=100000)
+    mongo_insert_user_ratings_bookmarks(db, batch_size=100000)
+
+    mongo_insert_film_avg_ratings(db, batch_size=1000)
+    mongo_insert_film_comments(db, batch_size=1000)
 
     db['film_comments'].create_index([('film_uuid', ASCENDING)], unique=True)
     db['film_comments'].create_index([('film_comments.user_uuid', ASCENDING)])

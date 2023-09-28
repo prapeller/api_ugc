@@ -3,7 +3,7 @@ import datetime
 import psycopg2
 from pymongo import MongoClient
 
-from config import postgres_settings
+from config import postgres_settings, mongo_settings
 
 postgres_config = {
     'host': postgres_settings.POSTGRES_HOST,
@@ -13,29 +13,25 @@ postgres_config = {
     'password': postgres_settings.POSTGRES_PASSWORD,
 }
 
-random_user_uuid_query_postgres = """
-select uuid from "user" 
-order by random()
-limit 1;
-"""
-
-random_film_uuid_query_postgres = """
-select uuid from film 
-order by random()
-limit 1;
-"""
-
 if __name__ == '__main__':
     conn = psycopg2.connect(**postgres_config)
     cursor = conn.cursor()
 
-    mongo_client = MongoClient('mongodb://127.0.0.1:27017')  # or to 2nd mongos (127.0.0.1:27020)
-    db = mongo_client['mongo_db']
+    mongo_client = MongoClient(f'mongodb://{mongo_settings.MONGO_HOST}:{mongo_settings.MONGO_PORT}')
+    db = mongo_client[f'{mongo_settings.MONGO_DB}']
 
-    cursor.execute(random_user_uuid_query_postgres)
+    cursor.execute("""
+    select uuid from "user" 
+    order by random()
+    limit 1""")
     user_uuid = cursor.fetchone()[0]
-    cursor.execute(random_film_uuid_query_postgres)
+
+    cursor.execute("""
+    select uuid from film 
+    order by random()
+    limit 1""")
     film_uuid = cursor.fetchone()[0]
+
     print(f'{user_uuid=:}')
     print(f'{film_uuid=:}')
 
