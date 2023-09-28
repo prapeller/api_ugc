@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  clickhouse:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: clickhouse
+    env_file:
+      - ../../.envs/.local/.clickhouse
+
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    networks:
+      - shared_network
+
+volumes:
+  clickhouse-data:
+
+networks:
+  shared_network:
+    external: true

@@ -1,0 +1,144 @@
+version: '3'
+
+services:
+  # Shard #1 - Replica Set #1 (3 nodes)
+  postgres_rs1_n1:
+    container_name: postgres_rs1_n1
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_node
+    ports:
+      - 5432:5432
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - data1:/var/lib/postgresql/data
+    networks:
+      - postgres_cluster_network
+
+  postgres_rs1_n2:
+    container_name: postgres_rs1_n2
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_node
+    ports:
+      - 5433:5432
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - data2:/var/lib/postgresql/data
+    networks:
+      - postgres_cluster_network
+
+  postgres_rs1_n3:
+    container_name: postgres_rs1_n3
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_node
+    ports:
+      - 5434:5432
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - data3:/var/lib/postgresql/data
+    networks:
+      - postgres_cluster_network
+
+  # Shard #2 - Replica Set #2 (3 nodes)
+  postgres_rs2_n1:
+    container_name: postgres_rs2_n1
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_node
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_PASSWORD: your_password_here
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - data4:/var/lib/postgresql/data
+    networks:
+      - postgres_cluster_network
+
+  postgres_rs2_n2:
+    container_name: postgres_rs2_n2
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_node
+    ports:
+      - 5436:5432
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - data5:/var/lib/postgresql/data
+    networks:
+      - postgres_cluster_network
+
+  postgres_rs2_n3:
+    container_name: postgres_rs2_n3
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_node
+    ports:
+      - 5437:5432
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - data6:/var/lib/postgresql/data
+    networks:
+      - postgres_cluster_network
+
+  # Query Routers
+  pgbouncer_1:
+    container_name: pgbouncer_1
+    build:
+      context: .
+      dockerfile: pgbouncer/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_bouncer
+    ports:
+      - 6432:6432
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - postgres_rs1_n1
+      - postgres_rs1_n2
+    networks:
+      - postgres_cluster_network
+
+
+  pgbouncer_2:
+    container_name: pgbouncer_2
+    build:
+      context: .
+      dockerfile: pgbouncer/Dockerfile
+    env_file:
+      - ../../.envs/.local/.postgres_bouncer
+    ports:
+      - 6433:6432
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - postgres_rs1_n1
+      - postgres_rs1_n2
+    networks:
+      - postgres_cluster_network
+
+networks:
+  postgres_cluster_network:
+    driver: bridge
+
+volumes:
+  data1: { }
+  data2: { }
+  data3: { }
+  data4: { }
+  data5: { }
+  data6: { }

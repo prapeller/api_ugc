@@ -1,0 +1,26 @@
+version: '3'
+
+# MongoDB Cluster
+
+# 1)
+# 1.1) shard #1 - replica set #1, 3 nodes,
+# 1.2) shard #2 - replica set #2, 3 nodes,
+# 2) config server replicas - 3 nodes
+# 3) 2 Mongos routers
+
+
+#1.1) shard #1 - replica set #1, 3 nodes,
+services:
+  mongo_ugc:
+    container_name: mongo_ugc
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 27017:27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data: { }

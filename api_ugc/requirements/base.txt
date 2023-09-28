@@ -1,0 +1,10 @@
+fastapi==0.103.1
+pydantic-settings==2.0.3
+uvicorn==0.23.2
+redis==4.5.4
+uvloop==0.17.0 ; sys_platform != "win32" and implementation_name == "cpython"
+httpx==0.24.1
+kafka-python==2.0.2
+orjson==3.9.5
+aiokafka==0.8.1
+pymongo==4.5.0

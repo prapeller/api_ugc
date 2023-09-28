@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+
+  postgres_ugc:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: postgres_ugc
+    hostname: postgres_ugc
+    volumes:
+      - postgres_data_ugc:/var/lib/postgresql/data
+    env_file:
+      - ../../.envs/.local/.postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data_ugc: { }

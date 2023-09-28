@@ -1,0 +1,138 @@
+---
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.0.1
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    env_file:
+      - ../../.envs/.local/.kafka/.zookeeper
+    networks:
+      - local_network
+      - shared_network
+
+  broker:
+    image: confluentinc/cp-server:6.0.1
+    container_name: broker
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    env_file:
+      - ../../.envs/.local/.kafka/.broker
+    networks:
+      - local_network
+      - shared_network
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:6.0.1
+    container_name: schema-registry
+    depends_on:
+      - broker
+    ports:
+      - "8081:8081"
+    env_file:
+      - ../../.envs/.local/.kafka/.schema-registry
+    networks:
+      - local_network
+      - shared_network
+
+  connect:
+    image: cnfldemos/cp-server-connect-datagen:0.4.0-6.0.1
+    container_name: connect
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - "8083:8083"
+    env_file:
+      - ../../.envs/.local/.kafka/.connect
+    networks:
+      - local_network
+      - shared_network
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:6.0.1
+    container_name: control-center
+    depends_on:
+      - broker
+      - schema-registry
+      - connect
+      - ksqldb-server
+    ports:
+      - "9021:9021"
+    env_file:
+      - ../../.envs/.local/.kafka/.control-center
+    networks:
+      - local_network
+      - shared_network
+
+  ksqldb-server:
+    image: confluentinc/cp-ksqldb-server:6.0.1
+    container_name: ksqldb-server
+    depends_on:
+      - broker
+      - connect
+    ports:
+      - "8088:8088"
+    env_file:
+      - ../../.envs/.local/.kafka/.ksqldb-server
+    networks:
+      - local_network
+      - shared_network
+
+  ksqldb-cli:
+    image: confluentinc/cp-ksqldb-cli:6.0.1
+    container_name: ksqldb-cli
+    depends_on:
+      - broker
+      - connect
+      - ksqldb-server
+    entrypoint: /bin/sh
+    tty: true
+    networks:
+      - local_network
+      - shared_network
+
+  ksql-datagen:
+    image: confluentinc/ksqldb-examples:6.0.1
+    container_name: ksql-datagen
+    depends_on:
+      - ksqldb-server
+      - broker
+      - schema-registry
+      - connect
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b broker:29092 1 40 && \
+                       echo Waiting for Confluent Schema Registry to be ready... && \
+                       cub sr-ready schema-registry 8081 40 && \
+                       echo Waiting a few seconds for topic creation to finish... && \
+                       sleep 11 && \
+                       tail -f /dev/null'"
+    env_file:
+      - ../../.envs/.local/.kafka/.ksql-datagen
+    networks:
+      - local_network
+      - shared_network
+
+  rest-proxy:
+    image: confluentinc/cp-kafka-rest:6.0.1
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - 8082:8082
+    container_name: rest-proxy
+    env_file:
+      - ../../.envs/.local/.kafka/.rest-proxy
+    networks:
+      - local_network
+      - shared_network
+
+networks:
+  local_network:
+    driver: bridge
+  shared_network:
+    external: true

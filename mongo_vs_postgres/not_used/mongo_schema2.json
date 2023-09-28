@@ -1,0 +1,17 @@
+{
+    "film_comments_ratings": [
+      {
+        "film_uuid": "uuid",
+        "avg_rating": "float",
+        "film_comments": [
+          {
+            "comment_uuid": "uuid",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "user_uuid": "uuid",
+            "comment": "string"
+          }
+        ]
+      }
+    ]
+}

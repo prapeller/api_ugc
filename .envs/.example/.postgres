@@ -1,0 +1,5 @@
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres_user
+POSTGRES_DB=postgres_db
+POSTGRES_PASSWORD=postgres_password
