@@ -1,4 +1,3 @@
 FROM clickhouse/clickhouse-server
-COPY entrypoint /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint
-ENTRYPOINT ["/usr/local/bin/entrypoint"]
+
+COPY init_simple_tables.sql /docker-entrypoint-initdb.d/

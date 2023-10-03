@@ -1,5 +1,5 @@
----
-version: '2'
+version: "3.9"
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:6.0.1
@@ -7,7 +7,7 @@ services:
     ports:
       - "2181:2181"
     env_file:
-      - ../../.envs/.local/.kafka/.zookeeper
+      - ../../.envs/.docker-compose-local/.kafka/.zookeeper
     networks:
       - local_network
       - shared_network
@@ -21,7 +21,7 @@ services:
       - "9092:9092"
       - "9101:9101"
     env_file:
-      - ../../.envs/.local/.kafka/.broker
+      - ../../.envs/.docker-compose-local/.kafka/.broker
     networks:
       - local_network
       - shared_network
@@ -34,7 +34,7 @@ services:
     ports:
       - "8081:8081"
     env_file:
-      - ../../.envs/.local/.kafka/.schema-registry
+      - ../../.envs/.docker-compose-local/.kafka/.schema-registry
     networks:
       - local_network
       - shared_network
@@ -48,7 +48,7 @@ services:
     ports:
       - "8083:8083"
     env_file:
-      - ../../.envs/.local/.kafka/.connect
+      - ../../.envs/.docker-compose-local/.kafka/.connect
     networks:
       - local_network
       - shared_network
@@ -64,7 +64,7 @@ services:
     ports:
       - "9021:9021"
     env_file:
-      - ../../.envs/.local/.kafka/.control-center
+      - ../../.envs/.docker-compose-local/.kafka/.control-center
     networks:
       - local_network
       - shared_network
@@ -78,7 +78,7 @@ services:
     ports:
       - "8088:8088"
     env_file:
-      - ../../.envs/.local/.kafka/.ksqldb-server
+      - ../../.envs/.docker-compose-local/.kafka/.ksqldb-server
     networks:
       - local_network
       - shared_network
@@ -112,7 +112,7 @@ services:
                        sleep 11 && \
                        tail -f /dev/null'"
     env_file:
-      - ../../.envs/.local/.kafka/.ksql-datagen
+      - ../../.envs/.docker-compose-local/.kafka/.ksql-datagen
     networks:
       - local_network
       - shared_network
@@ -126,7 +126,7 @@ services:
       - 8082:8082
     container_name: rest-proxy
     env_file:
-      - ../../.envs/.local/.kafka/.rest-proxy
+      - ../../.envs/.docker-compose-local/.kafka/.rest-proxy
     networks:
       - local_network
       - shared_network

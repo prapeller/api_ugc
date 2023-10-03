@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd etl_kafka_to_clickhouse
+python etl.py

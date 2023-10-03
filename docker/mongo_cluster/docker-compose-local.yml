@@ -1,4 +1,4 @@
-version: '3'
+version: "3.9"
 
 # MongoDB Cluster
 
@@ -16,25 +16,34 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    command: mongod --shardsvr --replSet mongo_rs1 --dbpath /data/db --port 27017
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command:  mongod --auth --shardsvr --replSet mongo_rs1 --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
+    command:  mongod --shardsvr --replSet mongo_rs1 --dbpath /data/db --port 27017
     ports:
       - 27017:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - mongo_cluster_data1:/data/db
+
   mongo_rs1_n2:
     container_name: mongo_rs1_n2
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --shardsvr --replSet mongo_rs1 --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --shardsvr --replSet mongo_rs1 --dbpath /data/db --port 27017
     ports:
       - 27027:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - mongo_cluster_data2:/data/db
 
@@ -43,12 +52,16 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --shardsvr --replSet mongo_rs1 --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --shardsvr --replSet mongo_rs1 --dbpath /data/db --port 27017
     ports:
       - 27037:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - mongo_cluster_data3:/data/db
 
@@ -58,12 +71,16 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --shardsvr --replSet mongo_rs2 --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --shardsvr --replSet mongo_rs2 --dbpath /data/db --port 27017
     ports:
       - 27047:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - mongo_cluster_data4:/data/db
 
@@ -72,12 +89,16 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --shardsvr --replSet mongo_rs2 --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --shardsvr --replSet mongo_rs2 --dbpath /data/db --port 27017
     ports:
       - 27057:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - mongo_cluster_data5:/data/db
 
@@ -86,12 +107,16 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --shardsvr --replSet mongo_rs2 --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --shardsvr --replSet mongo_rs2 --dbpath /data/db --port 27017
     ports:
       - 27067:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - mongo_cluster_data6:/data/db
 
@@ -101,10 +126,14 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --configsvr --replSet mongo_cfgrs --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --configsvr --replSet mongo_cfgrs --dbpath /data/db --port 27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - config1:/data/db
 
@@ -113,10 +142,14 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --configsvr --replSet mongo_cfgrs --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --configsvr --replSet mongo_cfgrs --dbpath /data/db --port 27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - config2:/data/db
 
@@ -125,10 +158,14 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
+#    command: mongod --auth --configsvr --replSet mongo_cfgrs --dbpath /data/db --port 27017 --keyFile /keyfile/keyfile
     command: mongod --configsvr --replSet mongo_cfgrs --dbpath /data/db --port 27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
       - config3:/data/db
 
@@ -138,15 +175,15 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    #    depends_on:
-    #      - mongo_cfgrs_1
-    #      - mongo_cfgrs_2
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
     command: mongos --configdb mongo_cfgrs/mongo_cfgrs_1:27017,mongo_cfgrs_2:27017,mongo_cfgrs_3:27017 --port 27017 --bind_ip_all
     ports:
       - 27019:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
 
   mongos_2:
@@ -154,18 +191,19 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    #    depends_on:
-    #      - mongo_cfgrs_1
-    #      - mongo_cfgrs_2
+    env_file:
+      - ../../.envs/.docker-compose-local/.mongo
     command: mongos --configdb mongo_cfgrs/mongo_cfgrs_1:27017,mongo_cfgrs_2:27017,mongo_cfgrs_3:27017 --port 27017 --bind_ip_all
     ports:
       - 27020:27017
     expose:
       - "27017"
     volumes:
+      - keyfile:/keyfile
       - /etc/localtime:/etc/localtime:ro
 
 volumes:
+  keyfile: { }
   config1: { }
   config2: { }
   config3: { }

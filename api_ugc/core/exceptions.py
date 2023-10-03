@@ -10,3 +10,11 @@ class UnauthorizedException(fa.HTTPException):
             detail=ResponseDetailEnum.unauthorized,
             headers={'WWW-Authenticate': 'Bearer'},
         )
+
+
+class NotFoundException(fa.HTTPException):
+    def __init__(self, detail):
+        super().__init__(
+            status_code=fa.status.HTTP_404_NOT_FOUND,
+            detail=detail,
+        )

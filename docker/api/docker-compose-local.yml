@@ -1,0 +1,86 @@
+version: "3.9"
+
+services:
+  redis_ugc:
+    build:
+      context: ../..
+      dockerfile: ./docker/redis/Dockerfile
+    container_name: redis_ugc
+    ports:
+      - "6382:6379"
+    networks:
+      - local_network_ugc
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping", "|", "grep", "PONG" ]
+      interval: 3s
+      timeout: 10s
+      retries: 3
+
+  api_ugc:
+    build:
+      context: ../..
+      dockerfile: ./docker/api/Dockerfile
+      args:
+        - BUILD_ENV=local
+    command: /start_local
+    container_name: api_ugc
+    volumes:
+      - ../..:/app
+    env_file:
+      - ../../.envs/.docker-compose-local/.api
+      - ../../.envs/.docker-compose-local/.clickhouse
+      - ../../.envs/.docker-compose-local/.kafka/.broker
+      - ../../.envs/.docker-compose-local/.redis
+    expose:
+      - "8084"
+    depends_on:
+      redis_ugc:
+        condition: service_healthy
+    network_mode: "host"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -H 'X-Request-Id: healthcheck' --fail -f http://$$API_UGC_HOST:$$API_UGC_PORT/docs" ]
+      interval: 3s
+      timeout: 10s
+      retries: 3
+
+  etl_kafka_postgres_ugc:
+    build:
+      context: ../..
+      dockerfile: ./docker/api/Dockerfile
+      args:
+        - BUILD_ENV=local
+    command: /start_etl_local
+    container_name: etl_kafka_postgres_ugc
+    volumes:
+      - ../..:/app
+    env_file:
+      - ../../.envs/.docker-compose-local/.clickhouse
+      - ../../.envs/.docker-compose-local/.kafka/.broker
+    network_mode: "host"
+
+  nginx_ugc:
+    restart: always
+    build:
+      context: ../..
+      dockerfile: ./docker/nginx/Dockerfile
+    container_name: nginx_ugc
+    depends_on:
+      - api_ugc
+    env_file:
+      - ../../.envs/.docker-compose-local/.api
+    ports:
+      - "82:82"
+    networks:
+      - local_network_ugc
+      - shared_network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "nginx_ugc", "82"]
+      interval: 3s
+      timeout: 10s
+      retries: 3
+
+networks:
+  local_network_ugc:
+    driver: bridge
+  shared_network:
+    external: true

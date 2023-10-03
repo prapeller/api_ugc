@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pydantic_settings as pd_settings
@@ -13,8 +14,14 @@ class PostgresSettings(pd_settings.BaseSettings):
     POSTGRES_PASSWORD: str
 
     class Config:
-        env_file = BASE_DIR / '.envs/.local/.postgres'
         extra = 'allow'
+
+    def __init__(self, DOCKER, DEBUG):
+        if DEBUG and DOCKER:
+            super().__init__(_env_file=[BASE_DIR / '.envs/.docker-compose-local/.postgres'])
+        else: # DEBUG and not DOCKER
+            super().__init__(_env_file=[BASE_DIR / '.envs/.local/.postgres'])
+
 
 
 class MongoSettings(pd_settings.BaseSettings):
@@ -25,9 +32,17 @@ class MongoSettings(pd_settings.BaseSettings):
     MONGO_PASSWORD: str
 
     class Config:
-        env_file = BASE_DIR / '.envs/.local/.mongo'
         extra = 'allow'
 
+    def __init__(self, DOCKER, DEBUG):
+        if DEBUG and DOCKER:
+            super().__init__(_env_file=[BASE_DIR / '.envs/.docker-compose-local/.mongo'])
+        else: # DEBUG and not DOCKER
+            super().__init__(_env_file=[BASE_DIR / '.envs/.local/.mongo'])
 
-postgres_settings = PostgresSettings()
-mongo_settings = MongoSettings()
+
+DOCKER = os.getenv('DOCKER')
+DEBUG = os.getenv('DEBUG')
+
+postgres_settings = PostgresSettings(DOCKER, DEBUG)
+mongo_settings = MongoSettings(DOCKER, DEBUG)

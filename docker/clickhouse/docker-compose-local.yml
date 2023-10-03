@@ -1,22 +1,21 @@
 version: "3.9"
 
 services:
-  clickhouse:
+  clickhouse_ugc:
     restart: always
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: clickhouse
+    container_name: clickhouse_ugc
     env_file:
-      - ../../.envs/.local/.clickhouse
-
+      - ../../.envs/.docker-compose-local/.clickhouse
     ports:
       - "9000:9000"
       - "8123:8123"
-    volumes:
-      - clickhouse-data:/var/lib/clickhouse
     networks:
       - shared_network
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
 
 volumes:
   clickhouse-data:

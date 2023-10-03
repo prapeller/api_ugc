@@ -1,20 +1,29 @@
 ## UGC service
 https://github.com/prapeller/ugc_sprint_2
-separate service for user-generated content.
-Why separate service? 
-Because 
-1) for user interface we'll use Mongo (not Postgres), mongo is faster for reading.
-2) for user_film_progress we'll use from Clickhouse
-All these separate technologies better to use in separate service, rather than create multi-technology service
+- provides possibility for users collect and control their activity
+- provides possibility for analytics team analise users activity, make business conclusions, and improve online cinema based on these conclusions
 
-prove of mongo vs postgres READ comparison:
-- > cp .envs/.example .envs/.local
+## Search service
+https://github.com/prapeller/Async_API_sprint_2
+- provides films search possibility by name/genre and other film properties
+
+## Auth service
+https://github.com/prapeller/Auth_sprint_2
+- provides user session control by authentication/authorization
+
+#### Why UGC is separate service?
+1) For user interface we'll use mongoDB (not Postgres), mongoDB is faster for reading (data is the subject of analysis of associations between different entities).
+2) For user_film_progress we'll use from Clickhouse (data is subject of time-dependent analysis).
+3) All these technologies better to use in separate service, rather than to paste them to already overloaded with technologies Search service.
+
+#### Deploy mongo vs postgres experiment for reading speed comparison:
+- > cp .envs/.example .envs/.docker-compose-local
 - > cd mongo_vs_postgres
 - > python3.11 -m venv venv
 - > source venv/bin/activate
 - > pip install -r requirements.txt
-- > make build-postgres
-- > make build-mongo
+- > make build-postgres-loc
+- > make build-mongo-loc
 - > make generate
 - > make compare
 
@@ -40,57 +49,41 @@ time: 0:00:00.000897 sec, 8 user_bookmarks: [{'film_uuid': '0aa26dbc-8ecf-4490-a
 time: 0:00:00.002585 sec, 8 avg_user_bookmarked_films_ratings: [{'_id': ObjectId('65155c13d1d122e7907a2c10'), 'avg_rating': 5.5}, {'_id': ObjectId('65155c13d1d122e7907a4d05'), 'avg_rating': 5.575892857142857}, {'_id': ObjectId('65155c13d1d122e7907a6092'), 'avg_rating': 5.45933014354067}, {'_id': ObjectId('65155c13d1d122e7907a63dc'), 'avg_rating': 5.162303664921466}, {'_id': ObjectId('65155c13d1d122e7907a6c63'), 'avg_rating': 5.623893805309734}, {'_id': ObjectId('65155c13d1d122e7907a7df4'), 'avg_rating': 5.799065420560748}, {'_id': ObjectId('65155c13d1d122e7907a8c76'), 'avg_rating': 5.673170731707317}, {'_id': ObjectId('65155c13d1d122e7907ab993'), 'avg_rating': 5.670807453416149}]
 ```
 
-With proper indexing and particular mongo_db schema - reading from mongo can be faster than postgres.
+#### Experiment resume:
 
-But data structure in Mongo for fast reading should be denormalized.
-This can cause to problems with speed of writing operations, but reading is priority here. 
-Also this can cause to problems with difficult queries.
+With proper mongoDB indexing and denormalized data schema - reading from mongoDB can be faster than Postgres.
+But denormalizing can cause to problems 
+- with speed of write operations, but as far as reading is priority here we ommit it.
+- with queries difficulty
 
-C, R, U, D: crud operations with stored information
+Besides... actually, if we denormalize data in Postgres the same way as in mongoDB, we'll have the same improvement ;)
+But assuming that we'll have wide geo-spread users - using mongo can make sharding easier.
 
-XXXX - very highly loaded operation
+### UGC service data storage description:
+#### Used abbreviations:
 
-XXX - highly loaded operation
+- C, R, U, D: crud operations with stored information
+- XXXX - very highly loaded operation
+- XXX - highly loaded operation
+- XX - normally loaded operation
+- X - lowly loaded operation
+- '-' - absense of operations (user/analytics cant perform this operation)
 
-XX - normally loaded operation
-
-X - lowly loaded operation
-
-'-' - absense of operations (user/analytics cant perform this operation)
-
-### Service Usage and performance:
-- users collect and control their activity
-- analytics team analise users activity, make business conclusions, and improve online cinema based on these conclusions
-
-### Entities description, performance loading:
-- #### Time-Analysis Focus (data is subject of time-dependent analysis)
+#### 1) Time-Analysis Focus (data is subject of time-dependent analysis, using ClickHouse, ddl can be found here: ./docker/clickhouse/init_simple_tables.sql ):
   
   - user_film_progress - user-film association (many-to-many) with current_time_sec value (film watching progress) and total_time_sec value (total film duration).
-    
     - C: XXXX constantly while each user is watching film (every 3 sec)
     - R: XX when it's needed to overview progress of film, continue watching
     - U: -
     - D: -
-    
-    created_at
-    user_uuid
-    film_uuid
-    current_time_sec
-    total_time_sec
 
-- #### Connection Analysis Focus (data is the subject of analysis of associations between different entities):
+#### 2) Connection Analysis Focus (data is the subject of analysis of associations between different entities, using mongoDB) The following data description is normalized schema for Postgres (demonstration and understanding purposes) the actual mongoDB denormalized data schema can be found here: ./docker/mongo/mongo_schema.json):
   - user_film_rating - user-film association (many-to-many) with rating value (from 1 upto 10 stars).
     - C: X after film was watched user can set his/her personal rating to film (rare event)
     - R: XX can be observed personal film rating (rare event, bcz can be observed at page of already watched film) / can be calculated all users' average rating for every film (once an hour event, cached)
     - U: X user have possibility to changes his/her rating (rare event)
     - D: -
-    
-    created_at
-    updated_at
-    user_uuid
-    film_uuid
-    rating
-  
+
   - user_film_comment - identified unique user-film association (many-to-many) with comment value (text) 
     - C: XX
     - R: XXX
@@ -111,20 +104,51 @@ X - lowly loaded operation
     - D: X
 
 ### Data storage volume estimation:
-1_000_000 user
-50_000 film
-10_000_000 user_film_rating
-15_000_000 user_film_comment
-100_000_000 user_comment_like
-10_000_000 user_film_bookmark
+- 1_000_000 users
+- 50_000 films
+- 10_000_000 user_film_ratings
+- 15_000_000 user_film_comments
+- 100_000_000 user_comment_likes
+- 10_000_000 user_film_bookmarks
 
-- For Time-Analysis Focus - ClickHouse was chosen
-- For Connection Analysis Focus - PostgreSQL or Mongo
+#### Deploy locally (api at host)
+- > cp .envs/.example .envs/.docker-compose-local
+- > cp .envs/.example .envs/.local
+- if it's needed to fill mongo cluster with fake data (generated in postgres)
+    - > make postgres-build-loc
+    - > cd mongo_vs_postgres
+    - > export DEBUG=True && export DOCKER=True
+    - > make generate
+    - > make etl
+    - > cd ..
+- if to use mongo:
+  - > make mongo-build-loc
+- elif to use mongo cluster:
+  - > make mongo-cluster-build-loc
+  - > make mongo-cluster-setup
+  - > make mongo-cluster-setup-user
+  - > make mongo-cluster-setup-indexes
+- > make clickhouse-build-loc
+- > make kafka-build-loc
+- > export DEBUG=True && export DOCKER=True
+- > make etl-kafka-clickhouse-loc
+- > cd api_ugc
+- > python3.11 -m venv venv
+- > source venv/bin/activate
+- > pip install -r requirements/local.txt
+- > export DEBUG=True && export DOCKER=False
+- > python main.py
 
-## Search service
-https://github.com/prapeller/Async_API_sprint_2
-- provides films search possibility by name/genre and other film properties
-
-## Auth service
-https://github.com/prapeller/Auth_sprint_2
-- provides user session control by authentication/authorization
+#### Deploy locally (api at docker container)
+- > cp .envs/.example .envs/.docker-compose-local
+- if it's needed to fill mongo cluster with fake data (generated in postgres)
+    - > make postgres-build-loc
+    - > cd mongo_vs_postgres
+    - > export DEBUG=True && export DOCKER=True
+    - > make generate
+    - > make etl
+    - > cd ..
+- if to use mongo:
+  - > make build-with-mongo-loc
+- if to use mongo cluster:
+  - > make build-with-mongo-cluster-loc

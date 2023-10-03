@@ -1,6 +1,16 @@
 from enum import Enum
 
 
+class LikeValueEnum(int, Enum):
+    like = 1
+    dislike = -1
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self.value)
+
 class EnvEnum(str, Enum):
     local = 'local'
     docker_compose_local = 'docker-compose-local'

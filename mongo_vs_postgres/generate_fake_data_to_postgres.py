@@ -19,9 +19,6 @@ postgres_config = {
     'password': postgres_settings.POSTGRES_PASSWORD,
 }
 
-conn = psycopg2.connect(**postgres_config)
-cursor = conn.cursor()
-
 USER = 1_000_000
 USER_CHUNK = 1_000
 
@@ -63,7 +60,7 @@ def iterable_to_gen(iterable):
         yield item
 
 
-def insert_users():
+def insert_users(cursor, conn):
     users_chunk = []
     for _ in range(USER // USER_CHUNK):
         for _ in range(USER_CHUNK):
@@ -86,7 +83,7 @@ def insert_users():
         conn.commit()
 
 
-def insert_films():
+def insert_films(cursor, conn):
     films_chunk = []
     for _ in range(FILM // FILM_CHUNK):
         for _ in range(FILM_CHUNK):
@@ -129,7 +126,7 @@ def unique_pair_gen(table_1, table_2, quantity):
     return iterable_to_gen(unique_pairs)
 
 
-def insert_user_film_rating():
+def insert_user_film_rating(cursor, conn):
     user_uuid_film_uuid_gen = unique_pair_gen('"user"', 'film', USER_FILM_RATING)
 
     ratings_chunk = []
@@ -148,7 +145,7 @@ def insert_user_film_rating():
         print(f'insert_user_film_rating() added {USER_FILM_RATING_CHUNK}')
 
 
-def insert_user_film_comment():
+def insert_user_film_comment(cursor, conn):
     user_uuid_film_uuid_gen = unique_pair_gen('"user"', 'film', USER_FILM_COMMENT)
 
     comments_chunk = []
@@ -189,7 +186,7 @@ def insert_user_comment_like_threaded(start, end, user_uuid_comment_uuid_gen):
     conn.close()
 
 
-def insert_user_comment_like():
+def insert_user_comment_like(cursor, conn):
     user_uuid_comment_uuid_gen = unique_pair_gen('"user"', 'user_film_comment', USER_COMMENT_LIKE)
 
     likes_chunk = []
@@ -209,7 +206,7 @@ def insert_user_comment_like():
         print(f'insert_user_comment_like() added {USER_COMMENT_LIKE_CHUNK}')
 
 
-def insert_user_film_bookmark():
+def insert_user_film_bookmark(cursor, conn):
     user_uuid_film_uuid_gen = unique_pair_gen('"user"', 'film', USER_FILM_BOOKMARK)
 
     bookmarks_chunk = []
@@ -399,12 +396,15 @@ def mongo_insert_user_ratings_bookmarks(db, batch_size):
 
 if __name__ == '__main__':
     # create fake data in postgres
-    insert_users()
-    insert_films()
-    insert_user_film_rating()
-    insert_user_film_comment()
-    insert_user_comment_like()
-    insert_user_film_bookmark()
+    conn = psycopg2.connect(**postgres_config)
+    cursor = conn.cursor()
+
+    insert_users(cursor, conn)
+    insert_films(cursor, conn)
+    insert_user_film_rating(cursor, conn)
+    insert_user_film_comment(cursor, conn)
+    insert_user_comment_like(cursor, conn)
+    insert_user_film_bookmark(cursor, conn)
 
     # etl this data to mongo
     mongo_client = MongoClient(f'mongodb://{mongo_settings.MONGO_HOST}:{mongo_settings.MONGO_PORT}')
@@ -412,10 +412,13 @@ if __name__ == '__main__':
 
     mongo_insert_comment_likes(db, batch_size=100000)
     mongo_insert_user_ratings_bookmarks(db, batch_size=100000)
-
     mongo_insert_film_avg_ratings(db, batch_size=1000)
     mongo_insert_film_comments(db, batch_size=1000)
 
+    # create mongo indexes
+
+    mongo_client = MongoClient(f'mongodb://{mongo_settings.MONGO_HOST}:{mongo_settings.MONGO_PORT}')
+    db = mongo_client[f'{mongo_settings.MONGO_DB}']
     db['film_comments'].create_index([('film_uuid', ASCENDING)], unique=True)
     db['film_comments'].create_index([('film_comments.user_uuid', ASCENDING)])
     db['film_avg_ratings'].create_index([('film_uuid', ASCENDING)], unique=True)

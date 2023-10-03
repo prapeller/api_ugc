@@ -5,6 +5,8 @@ from redis.asyncio import Redis
 
 import core.dependencies
 from api.v1.user_film_progress import router as user_film_progress_router
+from api.v1.film_comments import router as film_coments_router
+from api.v1.comment_likes import router as comment_likes_router
 from core.config import settings
 
 app = fa.FastAPI(
@@ -27,6 +29,8 @@ async def shutdown():
 
 v1_router_auth = fa.APIRouter()
 v1_router_auth.include_router(user_film_progress_router, prefix='/user-film-progress', tags=['user_film_progress'])
+v1_router_auth.include_router(film_coments_router, prefix='/film-comments', tags=['film_comments'])
+v1_router_auth.include_router(comment_likes_router, prefix='/comment-likes', tags=['comment_likes'])
 
 v1_router_public = fa.APIRouter()
 

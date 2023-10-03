@@ -82,7 +82,7 @@ if __name__ == '__main__':
     ch_cursor_gen = get_clickhouse_cursor_generator()
     consumer = next(consumer_gen)
     ch_cursor = next(ch_cursor_gen)
-    logger.debug(f'before listening to messages: {consumer=:}')
+    logger.debug(f'{consumer=:} is ready! {ch_cursor=:} is ready!')
 
     for message in consumer:
         logger.debug(f'consuming {message=:}')

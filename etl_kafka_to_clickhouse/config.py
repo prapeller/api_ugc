@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pydantic_settings as ps
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(ps.BaseSettings):
@@ -24,18 +24,18 @@ class Settings(ps.BaseSettings):
 
         if DEBUG and DOCKER:
             super().__init__(_env_file=[
-                BASE_DIR / '../.envs/.docker-compose-local/.clickhouse',
-                BASE_DIR / '../.envs/.docker-compose-local/.kafka/.broker',
+                BASE_DIR / '.envs/.docker-compose-local/.clickhouse',
+                BASE_DIR / '.envs/.docker-compose-local/.kafka/.broker',
             ])
         elif DEBUG and not DOCKER:
             super().__init__(_env_file=[
-                BASE_DIR / '../.envs/.local/.clickhouse',
-                BASE_DIR / '../.envs/.local/.kafka/.broker',
+                BASE_DIR / '.envs/.local/.clickhouse',
+                BASE_DIR / '.envs/.local/.kafka/.broker',
             ])
         else:
             super().__init__(_env_file=[
-                BASE_DIR / '../.envs/.prod/.clickhouse',
-                BASE_DIR / '../.envs/.prod/.kafka/.broker',
+                BASE_DIR / '.envs/.prod/.clickhouse',
+                BASE_DIR / '.envs/.prod/.kafka/.broker',
             ])
 
 

@@ -1,0 +1,50 @@
+{
+    "film_comments": [
+    {
+      "film_uuid": "uuid",
+      "film_comments": [
+        {
+          "comment_uuid": "uuid",
+          "created_at": "timestamp",
+          "updated_at": "timestamp",
+          "user_uuid": "uuid",
+          "comment": "string"
+        }
+      ]
+    }
+  ],
+    "film_avg_ratings": [
+    {
+      "film_uuid": "uuid",
+      "avg_rating": "float"
+    }
+  ],
+  "comment_likes": [
+    {
+      "comment_uuid": "uuid",
+      "likes_sum": "int",
+      "likes": [
+        {
+          "user_uuid": "uuid",
+          "like_value": "int"
+        }
+      ]
+    }
+  ],
+  "user_ratings_bookmarks": [
+    {
+      "user_uuid": "uuid",
+      "film_ratings": [
+        {
+          "film_uuid": "uuid",
+          "rating": "int"
+        }
+      ],
+      "film_bookmarks": [
+        {
+          "film_uuid": "uuid"
+        }
+      ]
+    }
+  ]
+}

@@ -1,8 +1,11 @@
 import json
 
+import clickhouse_driver
 import fastapi as fa
 import httpx
+import pydantic as pd
 from aiokafka import AIOKafkaProducer
+from clickhouse_driver.dbapi.cursor import Cursor as CHCursor
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from kafka import KafkaProducer
@@ -11,7 +14,9 @@ from redis.asyncio import Redis
 from core import config
 from core.config import settings
 from core.exceptions import UnauthorizedException
-from services.cache import RedisCache
+from services.cache.cache import RedisCache
+from services.clickhouse.clickhouse_repository import CHRepository
+from services.mongo.mongo_repository import MongoRepository
 
 redis: Redis | None = None
 
@@ -20,9 +25,7 @@ async def redis_dependency() -> Redis:
     return redis
 
 
-async def cache_dependency(
-        redis: Redis = Depends(redis_dependency),
-) -> RedisCache:
+async def redis_cache_dependency(redis: Redis = Depends(redis_dependency)) -> RedisCache:
     return RedisCache(redis)
 
 
@@ -52,13 +55,14 @@ async def verified_access_token_dependency(
     return json.loads(resp.text)
 
 
-async def get_current_user_id_dependency(
-        access_token: dict = fa.Depends(verified_access_token_dependency),
-) -> str:
-    return access_token.get('sub')
+async def current_user_uuid_dependency(
+        # access_token: dict = fa.Depends(verified_access_token_dependency),
+) -> pd.UUID4:
+    # return access_token.get('sub')
+    return '24e8f9e8-b9e8-49e1-9d52-efb94c4e9ce4'
 
 
-async def get_kafka_producer_dependency():
+async def kafka_producer_dependency():
     producer = KafkaProducer(
         bootstrap_servers=config.KAFKA_BROKER_PLAINTEXT_HOST_PORT,
         value_serializer=lambda v: json.dumps(v).encode('utf-8')
@@ -69,7 +73,7 @@ async def get_kafka_producer_dependency():
         producer.close()
 
 
-async def get_aiokafka_producer_dependency():
+async def aiokafka_producer_dependency():
     producer = AIOKafkaProducer(
         bootstrap_servers=config.KAFKA_BROKER_PLAINTEXT_HOST_PORT,
         value_serializer=lambda v: json.dumps(v).encode('utf-8')
@@ -79,3 +83,47 @@ async def get_aiokafka_producer_dependency():
         yield producer
     finally:
         await producer.stop()
+
+
+async def clickhouse_cursor_dependency():
+    clickhouse_conn = clickhouse_driver.connect(host=settings.CLICKHOUSE_HOST,
+                                                port=settings.CLICKHOUSE_PORT,
+                                                user=settings.CLICKHOUSE_USER,
+                                                password=settings.CLICKHOUSE_PASSWORD,
+                                                database=settings.CLICKHOUSE_DB)
+    cursor = clickhouse_conn.cursor()
+    try:
+        yield cursor
+    finally:
+        cursor.close()
+        clickhouse_conn.close()
+
+
+async def clickhouse_repo_dependency(
+        cursor: CHCursor = fa.Depends(clickhouse_cursor_dependency)
+):
+    repo = CHRepository(cursor)
+    try:
+        yield repo
+    finally:
+        repo.cursor.close()
+
+
+async def mongo_repo_dependency(redis_cache: RedisCache = fa.Depends(redis_cache_dependency)):
+    conn_string: str = f'mongodb://{settings.MONGO_HOST}:{settings.MONGO_PORT}'
+    db_name: str = settings.MONGO_DB
+    repo = MongoRepository(conn_string, db_name, redis_cache)
+    try:
+        yield repo
+    finally:
+        repo.close_connection()
+
+
+async def pagination_params_dependency(
+        offset: int | None = 0,
+        limit: int | None = 20,
+):
+    return {
+        'offset': offset,
+        'limit': limit,
+    }
