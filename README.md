@@ -77,7 +77,7 @@ But assuming that we'll have wide geo-spread users - using mongo can make shardi
     - U: -
     - D: -
 
-#### 2) Connection Analysis Focus (data is the subject of analysis of associations between different entities, using mongoDB) The following data description is normalized schema for Postgres (demonstration and understanding purposes) the actual mongoDB denormalized data schema can be found here: ./docker/mongo/mongo_schema.json):
+#### 2) Connection Analysis Focus (data is the subject of analysis of associations between different entities, using mongoDB) The following data description is normalized schema for Postgres (demonstration and understanding purposes) the actual mongoDB denormalized data schema can be found here: ./api_ugc/db/schemas/mongo_schema.json):
   - user_film_rating - user-film association (many-to-many) with rating value (from 1 upto 10 stars).
     - C: X after film was watched user can set his/her personal rating to film (rare event)
     - R: XX can be observed personal film rating (rare event, bcz can be observed at page of already watched film) / can be calculated all users' average rating for every film (once an hour event, cached)

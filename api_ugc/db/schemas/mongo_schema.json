@@ -1,5 +1,5 @@
 {
-    "film_comments": [
+  "film_comments": [
     {
       "film_uuid": "uuid",
       "film_comments": [
@@ -13,10 +13,16 @@
       ]
     }
   ],
-    "film_avg_ratings": [
+  "film_ratings": [
     {
       "film_uuid": "uuid",
-      "avg_rating": "float"
+      "avg_rating": "float",
+      "user_ratings": [
+        {
+          "user_uuid": "uuid",
+          "rating": "int"
+        }
+      ]
     }
   ],
   "comment_likes": [

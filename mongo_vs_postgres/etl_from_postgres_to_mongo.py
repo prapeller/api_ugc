@@ -15,22 +15,30 @@ postgres_config = {
 }
 
 
-def mongo_insert_film_avg_ratings(cursor, db, batch_size):
+def mongo_insert_film_ratings(cursor, db, batch_size):
     """
      "film_ratings": [
     {
       "film_uuid": "uuid",
       "avg_rating": "float",
+      "user_ratings": [
+        {
+          "user_uuid": "uuid",
+          "rating": "int"
+        }
+      ]
     }
   ]
     """
-    if 'film_avg_ratings' not in db.list_collection_names():
-        db.create_collection('film_avg_ratings')
-    film_avg_ratings_col = db['film_avg_ratings']
-    film_avg_ratings_col.delete_many({})
+    if 'film_ratings' not in db.list_collection_names():
+        db.create_collection('film_ratings')
+    film_ratings_col = db['film_ratings']
+    film_ratings_col.delete_many({})
 
     cursor.execute(f"""
-    select ufr.film_uuid, avg(ufr.rating)
+    select ufr.film_uuid, avg(ufr.rating), 
+    array_agg(json_build_object('user_uuid', ufr.user_uuid,
+                                'rating', ufr.rating)) as user_ratings
     from user_film_rating ufr
     group by ufr.film_uuid
     """)
@@ -38,12 +46,13 @@ def mongo_insert_film_avg_ratings(cursor, db, batch_size):
     while True:
         batch = [{
             'film_uuid': res[0],
-            'avg_rating': float(res[1])
+            'avg_rating': float(res[1]),
+            'user_ratings': (res[2])
         } for res in cursor.fetchmany(batch_size)]
         if not batch:
             break
         print(f'insert_film_ratings {len(batch)}')
-        film_avg_ratings_col.insert_many(batch)
+        film_ratings_col.insert_many(batch)
 
 
 def mongo_insert_film_comments(cursor, db, batch_size):
@@ -190,7 +199,7 @@ if __name__ == '__main__':
 
     mongo_insert_comment_likes(cursor, db, batch_size=100000)
     mongo_insert_user_ratings_bookmarks(cursor, db, batch_size=100000)
-    mongo_insert_film_avg_ratings(cursor, db, batch_size=1000)
+    mongo_insert_film_ratings(cursor, db, batch_size=1000)
     mongo_insert_film_comments(cursor, db, batch_size=1000)
 
     cursor.close()
