@@ -43,14 +43,14 @@ services:
       timeout: 10s
       retries: 3
 
-  etl_kafka_postgres_ugc:
+  etl_kafka_to_clickhouse_ugc:
     build:
       context: ../..
       dockerfile: ./docker/api/Dockerfile
       args:
         - BUILD_ENV=local
     command: /start_etl_local
-    container_name: etl_kafka_postgres_ugc
+    container_name: etl_kafka_to_clickhouse_ugc
     volumes:
       - ../..:/app
     env_file:
