@@ -6,11 +6,16 @@ API_DOCKER_COMPOSE_LOCAL := -f ./docker/api/docker-compose-local.yml
 
 
 build-loc:
-	@docker network create shared_network || true
 	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
 	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
 	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
 	docker-compose $(API_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+
+down-loc:
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) down
 
 build-with-mongo-cluster-loc:
 	@docker network create shared_network || true
