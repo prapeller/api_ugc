@@ -8,7 +8,7 @@ from services.mongo.mongo_repository import MongoRepository
 router = fa.APIRouter()
 
 
-@router.get('/my',
+@router.get('/{comment_uuid}/my',
             response_model=LikeReadSerializer | None)
 async def comment_likes_get_my(
         comment_uuid: pd.UUID4,
@@ -19,7 +19,7 @@ async def comment_likes_get_my(
     return await mongo_repo.comment_like_get_by_user_uuid(comment_uuid, user_uuid)
 
 
-@router.get('/',
+@router.get('/{comment_uuid}',
             response_model=CommentLikesReadSerializer)
 async def comment_likes_list(
         comment_uuid: pd.UUID4,
@@ -29,28 +29,29 @@ async def comment_likes_list(
     return await mongo_repo.comment_likes_list(comment_uuid)
 
 
-@router.post('/',
-             response_model=CommentLikesReadSerializer)
-async def comment_likes_create(
+@router.put('/{comment_uuid}',
+            response_model=CommentLikesReadSerializer)
+async def comment_likes_create_update(
         like_ser: LikeCreateSerializer,
         comment_uuid: pd.UUID4,
         user_uuid: pd.UUID4 = fa.Depends(current_user_uuid_dependency),
         mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency),
 ):
     """create like by current_user to particular comment
-        - if exists 'like', but is going to create 'dislike' - change it
-        - if exists 'dislike', but is going to create 'like' - change it
-        - if exists 'like', and going to create 'like' - raise 400
-        - if exists 'dislike', and going to create 'dislike' - raise 400
+            - if it doesn't exist
+        update like:
+            - if exists 'like'/'dislike', but sending other ('dislike'/'like')
+        raise 400:
+        - if exists 'like'/'dislike', and sending the same
     """
-    return await mongo_repo.comment_like_create(comment_uuid, user_uuid, like_ser)
+    return await mongo_repo.comment_like_update(comment_uuid, user_uuid, like_ser)
 
 
-@router.delete('/')
+@router.delete('/{comment_uuid}')
 async def comment_likes_delete(
         comment_uuid: pd.UUID4,
         user_uuid: pd.UUID4 = fa.Depends(current_user_uuid_dependency),
         mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency),
 ):
-    """delete like of current user"""
+    """delete like of current user to particular comment"""
     return await mongo_repo.comment_like_delete(comment_uuid, user_uuid)
