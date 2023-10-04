@@ -20,7 +20,7 @@ async def comment_likes_get_my(
 
 
 @router.get('/',
-            response_model=CommentLikesReadSerializer | None)
+            response_model=CommentLikesReadSerializer)
 async def comment_likes_list(
         comment_uuid: pd.UUID4,
         mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency),
@@ -40,8 +40,8 @@ async def comment_likes_create(
     """create like by current_user to particular comment
         - if exists 'like', but is going to create 'dislike' - change it
         - if exists 'dislike', but is going to create 'like' - change it
-        - if exists 'like', and going to create 'like' - do nothing
-        - if exists 'dislike', and going to create 'dislike' - do nothing
+        - if exists 'like', and going to create 'like' - raise 400
+        - if exists 'dislike', and going to create 'dislike' - raise 400
     """
     return await mongo_repo.comment_like_create(comment_uuid, user_uuid, like_ser)
 

@@ -37,7 +37,7 @@ class MongoRepository():
                 await self.cache.set(f'film_comments_by_{film_uuid=:}_{limit=:}_{offset=:}', res)
         except IndexError:
             raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                   detail=f'cant find film {film_uuid=:}')
+                                   detail=f'film not found, {film_uuid=:}')
         film_comments = FilmCommentsReadSerializer(film_uuid=film_uuid, film_comments=res.get('film_comments'))
         return film_comments
 
@@ -74,7 +74,7 @@ class MongoRepository():
             return FilmCommentReadSerializer(**res["film_comments"][0])
         else:
             raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                   detail=f'cant find comment by {comment_uuid=:}')
+                                   detail=f'comment not found, {comment_uuid=:}')
 
     async def film_comments_update(self, comment_uuid: pd.UUID4,
                                    comment_ser: FilmCommentUpdateSerializer) -> FilmCommentReadSerializer | None:
@@ -102,7 +102,7 @@ class MongoRepository():
                         return {'message': 'ok'}
                     else:
                         raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                               detail=f'cant find comment by {comment_uuid=:}')
+                                               detail=f'comment not found, {comment_uuid=:}')
 
             except errors.PyMongoError as e:
                 await session.abort_transaction()
@@ -120,12 +120,13 @@ class MongoRepository():
         else:
             return None
 
-    async def comment_likes_list(self, comment_uuid: pd.UUID4) -> CommentLikesReadSerializer | None:
+    async def comment_likes_list(self, comment_uuid: pd.UUID4) -> CommentLikesReadSerializer:
         res = await self.db.comment_likes.find_one({'comment_uuid': str(comment_uuid)})
         if res:
             return CommentLikesReadSerializer(**res)
         else:
-            return None
+            raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                                   detail=f"comment_likes not found, {comment_uuid=:}")
 
     async def comment_likes_update(self, comment_uuid: pd.UUID4, comment_likes_ser: CommentLikesUpdateSerializer):
         res = await self.db.comment_likes.update_one(
@@ -134,8 +135,10 @@ class MongoRepository():
         )
         if res.modified_count > 0:
             return await self.comment_likes_list(comment_uuid)
-        raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST,
-                               detail=f"can't create/update like/dislike for {comment_uuid=:}")
+
+        else:
+            raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST,
+                                   detail=f"can't update comment_likes, {comment_uuid=:}")
 
     async def comment_like_create(self, comment_uuid: pd.UUID4, user_uuid: pd.UUID4, like_ser: LikeCreateSerializer):
         """
@@ -175,6 +178,9 @@ class MongoRepository():
     async def comment_like_delete(self, comment_uuid: pd.UUID4, user_uuid: pd.UUID4):
         comment_likes = await self.comment_likes_list(comment_uuid)
         my_like = await self.comment_like_get_by_user_uuid(comment_uuid, user_uuid)
+        if my_like is None:
+            raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                                   detail=f"current_users's like not found, {comment_uuid=:}")
 
         if my_like.like_value == LikeValueEnum.like:
             comment_likes.likes_sum = comment_likes.likes_sum - 1
@@ -185,4 +191,5 @@ class MongoRepository():
             if str(like.user_uuid) == user_uuid:
                 comment_likes.likes.pop(ind)
 
-        return await self.comment_likes_update(comment_uuid, CommentLikesUpdateSerializer(**comment_likes.model_dump()))
+        await self.comment_likes_update(comment_uuid, CommentLikesUpdateSerializer(**comment_likes.model_dump()))
+        return {'message': 'ok'}
