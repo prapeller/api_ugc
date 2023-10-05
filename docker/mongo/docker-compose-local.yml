@@ -6,11 +6,19 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    networks:
+      - shared_network
     ports:
       - 27017:27017
+    expose:
+      - 27017
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - mongo_data:/data/db
 
 volumes:
   mongo_data: { }
+
+networks:
+  shared_network:
+    external: true

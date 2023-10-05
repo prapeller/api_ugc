@@ -29,6 +29,7 @@ services:
     env_file:
       - ../../.envs/.docker-compose-local/.api
       - ../../.envs/.docker-compose-local/.clickhouse
+      - ../../.envs/.docker-compose-local/.mongo
       - ../../.envs/.docker-compose-local/.kafka/.broker
       - ../../.envs/.docker-compose-local/.redis
     expose:
@@ -36,7 +37,9 @@ services:
     depends_on:
       redis_ugc:
         condition: service_healthy
-    network_mode: "host"
+    networks:
+      - local_network_ugc
+      - shared_network
     healthcheck:
       test: [ "CMD-SHELL", "curl -H 'X-Request-Id: healthcheck' --fail -f http://$$API_UGC_HOST:$$API_UGC_PORT/docs" ]
       interval: 3s
@@ -56,7 +59,8 @@ services:
     env_file:
       - ../../.envs/.docker-compose-local/.clickhouse
       - ../../.envs/.docker-compose-local/.kafka/.broker
-    network_mode: "host"
+    networks:
+      - shared_network
 
   nginx_ugc:
     restart: always
@@ -74,7 +78,7 @@ services:
       - local_network_ugc
       - shared_network
     healthcheck:
-      test: ["CMD", "nc", "-z", "nginx_ugc", "82"]
+      test: [ "CMD", "nc", "-z", "nginx_ugc", "82" ]
       interval: 3s
       timeout: 10s
       retries: 3

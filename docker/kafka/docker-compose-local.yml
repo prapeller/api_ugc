@@ -18,8 +18,10 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
-      - "9101:9101"
+      - 9092:9092
+      - 9101:9101
+    expose:
+      - 9092
     env_file:
       - ../../.envs/.docker-compose-local/.kafka/.broker
     networks:
