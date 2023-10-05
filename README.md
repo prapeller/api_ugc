@@ -111,16 +111,8 @@ But assuming that we'll have wide geo-spread users - using mongo can make shardi
 - 100_000_000 user_comment_likes
 - 10_000_000 user_film_bookmarks
 
-#### Deploy locally (api at host)
-- > cp .envs/.example .envs/.docker-compose-local
-- > cp .envs/.example .envs/.local
-- if it's needed to fill mongo cluster with fake data (generated in postgres)
-    - > make postgres-build-loc
-    - > cd mongo_vs_postgres
-    - > export DEBUG=True && export DOCKER=True
-    - > make generate
-    - > make etl
-    - > cd ..
+
+## Deploy locally (api at host)
 - if to use mongo:
   - > make mongo-build-loc
 - elif to use mongo cluster:
@@ -128,6 +120,13 @@ But assuming that we'll have wide geo-spread users - using mongo can make shardi
   - > make mongo-cluster-setup
   - > make mongo-cluster-setup-user
   - > make mongo-cluster-setup-indexes
+- if it's needed to fill mongo/mongo_cluster with fake data (generated in postgres)
+    - > make postgres-build-loc
+    - > cd mongo_vs_postgres
+    - > export DEBUG=True && export DOCKER=True
+    - > make generate
+    - > make etl
+    - > cd ..
 - > make clickhouse-build-loc
 - > make kafka-build-loc
 - > export DEBUG=True && export DOCKER=True
@@ -138,17 +137,20 @@ But assuming that we'll have wide geo-spread users - using mongo can make shardi
 - > pip install -r requirements/local.txt
 - > export DEBUG=True && export DOCKER=False
 - > python main.py
+  
+docs can be found: http://127.0.0.1:8084/DOCS_URL
 
-#### Deploy locally (api at docker container)
-- > cp .envs/.example .envs/.docker-compose-local
-- if it's needed to fill mongo cluster with fake data (generated in postgres)
+## Deploy locally (api at docker container)
+- if to use mongo:
+  - > make build-with-mongo-loc
+- if to use mongo cluster:
+  - > make build-with-mongo-cluster-loc
+- if it's needed to fill mongo with fake data (generated in postgres)
     - > make postgres-build-loc
     - > cd mongo_vs_postgres
     - > export DEBUG=True && export DOCKER=True
     - > make generate
     - > make etl
     - > cd ..
-- if to use mongo:
-  - > make build-with-mongo-loc
-- if to use mongo cluster:
-  - > make build-with-mongo-cluster-loc
+
+docs can be found: http://127.0.0.1:82/DOCS_URL

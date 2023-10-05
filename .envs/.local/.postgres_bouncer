@@ -1,0 +1,10 @@
+PGBOUNCER_POOL_MODE: session
+PGBOUNCER_POOL_SIZE: 20
+PGBOUNCER_MAX_CLIENT_CONN: 200
+PGBOUNCER_DEFAULT_POOL_SIZE: 50
+PGBOUNCER_RESERVE_POOL_SIZE: 5
+PGBOUNCER_SERVER_IDLE_TIMEOUT: 240
+PGBOUNCER_SERVER_CONNECT_TIMEOUT: 10
+PGBOUNCER_QUERY_TIMEOUT: 0
+AUTH_FILE=auth.txt
+DATABASES=postgres_rs1_n1=host=postgres_rs1_n1 port=5432,postgres_rs1_n2=host=postgres_rs1_n2 port=5432,postgres_rs1_n3=host=postgres_rs1_n3 port=5432,postgres_rs2_n1=host=postgres_rs2_n1 port=5432,postgres_rs2_n2=host=postgres_rs2_n2 port=5432,postgres_rs2_n3=host=postgres_rs2_n3 port=5432

@@ -136,8 +136,6 @@ my_files/
 
 # Project files should stay locally only
 .envs/.prod*
-.envs/.local*
-.envs/.docker-compose-local*
 api_ugc/staticfiles/backups/*
 
 README.md

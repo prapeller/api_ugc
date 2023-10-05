@@ -138,6 +138,5 @@ my_files/
 # Project files should stay locally only
 mongo_vs_postgres/venv
 
-.envs/.local*
-.envs/.docker-compose-local*
+.envs/.prod*
 api_ugc/staticfiles/backups/*
