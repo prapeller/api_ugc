@@ -60,6 +60,6 @@ async def film_comments_create(
         user_uuid: pd.UUID4 = fa.Depends(current_user_uuid_dependency),
         mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency)
 ):
-    """create film_comment for particular film"""
+    """create film_comment of current_user to particular film"""
     comment_ser.user_uuid = user_uuid
     return await mongo_repo.film_comments_create(film_uuid, user_uuid, comment_ser)

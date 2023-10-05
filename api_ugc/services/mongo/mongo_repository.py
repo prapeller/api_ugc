@@ -85,7 +85,7 @@ class MongoRepository():
         res = await self.db.film_comments.find_one(
             {"film_comments": {"$elemMatch": {"comment_uuid": str(comment_uuid)}}},
             {"film_comments.$": 1})
-        if res and 'film_comments' in res:
+        if res is not None and 'film_comments' in res:
             return FilmCommentReadSerializer(**res["film_comments"][0])
         else:
             raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
@@ -132,14 +132,14 @@ class MongoRepository():
             {'comment_uuid': str(comment_uuid), 'likes': {'$elemMatch': {'user_uuid': str(user_uuid)}}},
             {'likes.$': 1}
         )
-        if res and 'likes' in res:
+        if res is not None and 'likes' in res:
             return LikeReadSerializer(**res["likes"][0])
         else:
             return None
 
     async def comment_likes_list(self, comment_uuid: pd.UUID4) -> CommentLikesReadSerializer:
         res = await self.db.comment_likes.find_one({'comment_uuid': str(comment_uuid)})
-        if res:
+        if res is not None:
             return CommentLikesReadSerializer(**res)
         else:
             raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
@@ -229,10 +229,13 @@ class MongoRepository():
             res = await self.cache.get(f'film_ratings_{film_uuid=:}')
             if res is None:
                 res = await self.db.film_ratings.find_one({'film_uuid': str(film_uuid)})
-                await self.cache.set(f'film_ratings_{film_uuid=:}', res)
-
-            return FilmRatingsReadSerializer(film_uuid=film_uuid, avg_rating=res.get('avg_rating'),
-                                             user_ratings=res.get('user_ratings'))
+                if res is not None:
+                    await self.cache.set(f'film_ratings_{film_uuid=:}', res)
+                    return FilmRatingsReadSerializer(film_uuid=film_uuid, avg_rating=res.get('avg_rating'),
+                                                     user_ratings=res.get('user_ratings'))
+                else:
+                    raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                                           detail=f'film_ratings not found, {film_uuid=:}')
 
         except errors.PyMongoError as e:
             detail = f"can't list film_ratings, {film_uuid=:}: {e}"
@@ -241,13 +244,19 @@ class MongoRepository():
 
     async def rating_get_by_film_by_user(self, film_uuid: pd.UUID4, user_uuid: pd.UUID4) -> FilmRatingReadSerializer:
         try:
-            user_ratings_bookmarks_res = await self.db.user_ratings_bookmarks.find_one({'user_uuid': user_uuid})
+            user_ratings_bookmarks_query = {
+                'user_uuid': str(user_uuid),
+                'film_ratings': {'$elemMatch': {'film_uuid': str(film_uuid)}}
+            }
+            projection = {'film_ratings.$': 1}
+            user_ratings_bookmarks_res = await self.db.user_ratings_bookmarks.find_one(user_ratings_bookmarks_query,
+                                                                                       projection)
 
             if user_ratings_bookmarks_res:
-                user_ratings = user_ratings_bookmarks_res.get('film_ratings')
-                for r in user_ratings:
-                    if r['film_uuid'] == str(film_uuid):
-                        return FilmRatingReadSerializer(**r)
+                user_ratings = user_ratings_bookmarks_res.get('film_ratings', [])
+                if user_ratings:
+                    return FilmRatingReadSerializer(**user_ratings[0])
+
             else:
                 raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
                                        detail=f'film_rating not found, {user_uuid=:}, {film_uuid=:}')
@@ -259,6 +268,10 @@ class MongoRepository():
 
     async def rating_update_by_film_by_user(self, film_uuid: pd.UUID4, user_uuid: pd.UUID4,
                                             rating_ser: UserRatingUpdateSerializer) -> UserRatingReadSerializer:
+        # check if this rating exists, raise 404 if not
+        await self.rating_get_by_film_by_user(film_uuid, user_uuid)
+
+        # if exists - update
         session = await self.client.start_session()
         try:
             async with session.start_transaction():
@@ -304,6 +317,9 @@ class MongoRepository():
             session.end_session()
 
     async def ratings_delete_by_film_by_user(self, film_uuid: pd.UUID4, user_uuid: pd.UUID4):
+        # check if this rating exists, raise 404 if not
+        await self.rating_get_by_film_by_user(film_uuid, user_uuid)
+
         session = await self.client.start_session()
         try:
             async with session.start_transaction():
@@ -377,7 +393,29 @@ class MongoRepository():
             logger.error(detail)
             raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST, detail=detail)
 
+    async def bookmarks_get_by_film_by_user(self, film_uuid, user_uuid):
+        try:
+            user_ratings_bookmarks_query = {
+                'user_uuid': str(user_uuid),
+                'film_bookmarks': {'$elemMatch': {'film_uuid': str(film_uuid)}}
+            }
+            projection = {'film_bookmarks.$': 1}
+            user_ratings_bookmarks_res = await self.db.user_ratings_bookmarks.find_one(user_ratings_bookmarks_query,
+                                                                                       projection)
+            if user_ratings_bookmarks_res is None:
+                raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                                       detail=f'film_bookmark not found, {user_uuid=:}')
+            return None
+
+        except errors.PyMongoError as e:
+            detail = f"can't delete film_bookmark, {user_uuid=:}, {film_uuid=:}: {e}"
+            logger.error(detail)
+            raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST, detail=detail)
+
     async def bookmarks_delete_by_film_by_user(self, film_uuid, user_uuid):
+        # # check if this user's  film_bookmark exists, raise 404 if not
+        await self.bookmarks_get_by_film_by_user(film_uuid, user_uuid)
+
         try:
             result = await self.db.user_ratings_bookmarks.update_one(
                 {'user_uuid': str(user_uuid)},

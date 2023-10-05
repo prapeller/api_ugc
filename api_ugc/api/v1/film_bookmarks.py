@@ -3,8 +3,6 @@ import pydantic as pd
 
 from core.dependencies import mongo_repo_dependency, current_user_uuid_dependency
 from db.schemas.film_bookmarks import UserBookmarksSerializer, BookmarkSerializer
-from db.schemas.film_ratings import FilmRatingsReadSerializer, UserRatingUpdateSerializer, \
-    UserRatingReadSerializer
 from services.mongo.mongo_repository import MongoRepository
 
 router = fa.APIRouter()
@@ -21,7 +19,7 @@ async def film_bookmarks_list_my(
 
 
 @router.post('/',
-            response_model=BookmarkSerializer)
+             response_model=BookmarkSerializer)
 async def film_bookmarks_create(
         bookmark_ser: BookmarkSerializer,
         user_uuid: pd.UUID4 = fa.Depends(current_user_uuid_dependency),
