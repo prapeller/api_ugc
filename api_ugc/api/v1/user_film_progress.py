@@ -35,6 +35,6 @@ async def user_film_progress_create(
 async def user_film_progress(
         film_uuid: pd.UUID4,
         user_uuid: pd.UUID4 = fa.Depends(current_user_uuid_dependency),
-        ch_repo: CHRepository = fa.Depends(clickhouse_repo_dependency)
+        ch_repo: CHRepository = fa.Depends(clickhouse_repo_dependency),
 ):
     return ch_repo.get_last_user_film_progress(user_uuid, film_uuid)

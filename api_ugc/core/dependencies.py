@@ -45,8 +45,8 @@ async def verified_access_token_dependency(
     }
     data = {
         'useragent': request.headers.get("user-agent"),
-        # 'ip': request.client.host,
-        'ip': '172.20.0.5',
+        # 'ip': '172.20.0.5',
+        'ip': request.client.host,
         'access_token': access_token,
     }
     async with httpx.AsyncClient() as client:
@@ -57,10 +57,10 @@ async def verified_access_token_dependency(
 
 
 async def current_user_uuid_dependency(
-        # access_token: dict = fa.Depends(verified_access_token_dependency),
+        access_token: dict = fa.Depends(verified_access_token_dependency),
 ) -> pd.UUID4:
-    # return pd.UUID4(access_token.get('sub'))
-    return pd.UUID4('0084ba96-8688-4a1b-b4a2-691c38a99e61')
+    # return pd.UUID4('0084ba96-8688-4a1b-b4a2-691c38a99e61')
+    return pd.UUID4(access_token.get('sub'))
 
 
 async def kafka_producer_dependency() -> Generator[KafkaProducer, None, None]:
@@ -101,7 +101,7 @@ async def clickhouse_cursor_dependency() -> Generator[CHCursor, None, None]:
 
 
 async def clickhouse_repo_dependency(
-        cursor: CHCursor = fa.Depends(clickhouse_cursor_dependency)
+        cursor: CHCursor = fa.Depends(clickhouse_cursor_dependency),
 ) -> Generator[CHRepository, None, None]:
     repo = CHRepository(cursor)
     try:
@@ -111,7 +111,7 @@ async def clickhouse_repo_dependency(
 
 
 async def mongo_repo_dependency(
-        redis_cache: RedisCache = fa.Depends(redis_cache_dependency)
+        redis_cache: RedisCache = fa.Depends(redis_cache_dependency),
 ) -> Generator[MongoRepository, None, None]:
     repo = MongoRepository(
         conn_string=f'mongodb://{settings.MONGO_HOST}:{settings.MONGO_PORT}',

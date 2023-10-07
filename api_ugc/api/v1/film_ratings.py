@@ -34,7 +34,7 @@ async def film_ratings_get_by_film_my(
             response_model=FilmRatingsReadSerializer)
 async def film_ratings_list_by_film(
         film_uuid: pd.UUID4,
-        mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency)
+        mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency),
 ):
     """list all ratings and average_rating of particular film"""
     return await mongo_repo.ratings_list_by_film(film_uuid)
@@ -46,7 +46,7 @@ async def film_ratings_update_my(
         film_uuid: pd.UUID4,
         rating_ser: UserRatingUpdateSerializer,
         user_uuid: pd.UUID4 = fa.Depends(current_user_uuid_dependency),
-        mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency)
+        mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency),
 ):
     """update rating of current user to particular film if it exists (create if it doesn't exist)
     (in user_ratings_bookmarks and in film_ratings with recalculating avg_rating)"""
@@ -57,7 +57,7 @@ async def film_ratings_update_my(
 async def film_comments_delete_my(
         film_uuid: pd.UUID4,
         user_uuid: pd.UUID4 = fa.Depends(current_user_uuid_dependency),
-        mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency)
+        mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency),
 ):
     """delete rating of current user to particular film if it exists"""
     return await mongo_repo.ratings_delete_by_film_by_user(film_uuid, user_uuid)

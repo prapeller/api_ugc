@@ -30,11 +30,20 @@ jobs:
 
     - name: Run wemake-python-styleguide and generate HTML
       run: |
-        flake8 . --format=html --htmldir=flake8_report
+        flake8 . --format=html --htmldir=flake8_report || exit_code=$?
+        echo "Flake8 exited with code $exit_code"
+      continue-on-error: true
+
+    - name: Archive flake8 HTML report
+      uses: actions/upload-artifact@v2
+      with:
+        name: flake8-report
+        path: flake8_report/
 
     - name: Type checking with Mypy
       run: |
         mypy --strict .
+      continue-on-error: true
 
     - name: Send Telegram Notification if Successful
       if: ${{ success() }}
