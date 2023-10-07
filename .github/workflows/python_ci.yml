@@ -34,6 +34,12 @@ jobs:
         echo "Flake8 exited with code $exit_code"
       continue-on-error: true
 
+    - name: Archive flake8 HTML report
+      uses: actions/upload-artifact@v2
+      with:
+        name: flake8-report
+        path: flake8_report/
+
     - name: Type checking with Mypy
       run: |
         mypy --strict .
