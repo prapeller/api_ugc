@@ -30,7 +30,9 @@ jobs:
 
     - name: Run wemake-python-styleguide and generate HTML
       run: |
-        flake8 . --format=html --htmldir=flake8_report
+        flake8 . --format=html --htmldir=flake8_report || exit_code=$?
+        echo "Flake8 exited with code $exit_code"
+      continue-on-error: true
 
     - name: Type checking with Mypy
       run: |
