@@ -1,4 +1,5 @@
 import json
+from typing import Generator
 
 import clickhouse_driver
 import fastapi as fa
@@ -62,7 +63,7 @@ async def current_user_uuid_dependency(
     # return '0084ba96-8688-4a1b-b4a2-691c38a99e61'
 
 
-async def kafka_producer_dependency():
+async def kafka_producer_dependency() -> Generator[KafkaProducer, None, None]:
     producer = KafkaProducer(
         bootstrap_servers=config.KAFKA_BROKER_PLAINTEXT_HOST_PORT,
         value_serializer=lambda v: json.dumps(v).encode('utf-8')
@@ -73,7 +74,7 @@ async def kafka_producer_dependency():
         producer.close()
 
 
-async def aiokafka_producer_dependency():
+async def aiokafka_producer_dependency() -> Generator[AIOKafkaProducer, None, None]:
     producer = AIOKafkaProducer(
         bootstrap_servers=config.KAFKA_BROKER_PLAINTEXT_HOST_PORT,
         value_serializer=lambda v: json.dumps(v).encode('utf-8')
@@ -85,7 +86,7 @@ async def aiokafka_producer_dependency():
         await producer.stop()
 
 
-async def clickhouse_cursor_dependency():
+async def clickhouse_cursor_dependency() -> Generator[CHCursor, None, None]:
     clickhouse_conn = clickhouse_driver.connect(host=settings.CLICKHOUSE_HOST,
                                                 port=settings.CLICKHOUSE_PORT,
                                                 user=settings.CLICKHOUSE_USER,
@@ -101,7 +102,7 @@ async def clickhouse_cursor_dependency():
 
 async def clickhouse_repo_dependency(
         cursor: CHCursor = fa.Depends(clickhouse_cursor_dependency)
-):
+) -> Generator[CHRepository, None, None]:
     repo = CHRepository(cursor)
     try:
         yield repo
@@ -109,10 +110,13 @@ async def clickhouse_repo_dependency(
         repo.cursor.close()
 
 
-async def mongo_repo_dependency(redis_cache: RedisCache = fa.Depends(redis_cache_dependency)):
-    conn_string: str = f'mongodb://{settings.MONGO_HOST}:{settings.MONGO_PORT}'
-    db_name: str = settings.MONGO_DB
-    repo = MongoRepository(conn_string, db_name, redis_cache)
+async def mongo_repo_dependency(
+        redis_cache: RedisCache = fa.Depends(redis_cache_dependency)
+) -> Generator[MongoRepository, None, None]:
+    repo = MongoRepository(
+        conn_string=f'mongodb://{settings.MONGO_HOST}:{settings.MONGO_PORT}',
+        db_name=settings.MONGO_DB,
+        cache=redis_cache)
     try:
         yield repo
     finally:
@@ -122,7 +126,7 @@ async def mongo_repo_dependency(redis_cache: RedisCache = fa.Depends(redis_cache
 async def pagination_params_dependency(
         offset: int | None = 0,
         limit: int | None = 20,
-):
+) -> dict:
     return {
         'offset': offset,
         'limit': limit,
