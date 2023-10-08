@@ -4,7 +4,7 @@ services:
   redis_ugc:
     build:
       context: ../..
-      dockerfile: ./docker/redis/Dockerfile
+      dockerfile: ./docker/api/redis/Dockerfile
     container_name: redis_ugc
     ports:
       - "6382:6379"
@@ -24,6 +24,11 @@ services:
         - BUILD_ENV=local
     command: /start_local
     container_name: api_ugc
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
     volumes:
       - ../..:/app
     env_file:
@@ -32,6 +37,8 @@ services:
       - ../../.envs/.docker-compose-local/.mongo
       - ../../.envs/.docker-compose-local/.kafka/.broker
       - ../../.envs/.docker-compose-local/.redis
+    ports:
+      - "8084:8084"
     expose:
       - "8084"
     depends_on:
@@ -42,7 +49,7 @@ services:
       - shared_network
     healthcheck:
       test: [ "CMD-SHELL", "curl -H 'X-Request-Id: healthcheck' --fail -f http://$$API_UGC_HOST:$$API_UGC_PORT/docs" ]
-      interval: 3s
+      interval: 10s
       timeout: 10s
       retries: 3
 
@@ -66,7 +73,7 @@ services:
     restart: always
     build:
       context: ../..
-      dockerfile: ./docker/nginx/Dockerfile
+      dockerfile: ./docker/api/nginx/Dockerfile
     container_name: nginx_ugc
     depends_on:
       - api_ugc
