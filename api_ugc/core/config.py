@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import pydantic_settings as ps
+import pydantic as pd
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -15,6 +16,7 @@ class Settings(ps.BaseSettings):
 
     API_AUTH_HOST: str
     API_AUTH_PORT: int
+    SENTRY_DSN: pd.HttpUrl
 
     CLICKHOUSE_HOST: str
     CLICKHOUSE_PORT: int
@@ -34,6 +36,9 @@ class Settings(ps.BaseSettings):
     MONGO_USER: str
     MONGO_PASSWORD: str
 
+    LOGSTASH_HOST: str
+    LOGSTASH_PORT: int
+
     class Config:
         extra = 'allow'
 
@@ -41,18 +46,21 @@ class Settings(ps.BaseSettings):
 
         if DEBUG and DOCKER:
             super().__init__(_env_file=[BASE_DIR / '../.envs/.docker-compose-local/.api',
+                                        BASE_DIR / '../.envs/.docker-compose-local/.elk/.logstash',
                                         BASE_DIR / '../.envs/.docker-compose-local/.clickhouse',
                                         BASE_DIR / '../.envs/.docker-compose-local/.mongo',
                                         BASE_DIR / '../.envs/.docker-compose-local/.kafka/.broker',
                                         BASE_DIR / '../.envs/.docker-compose-local/.redis'])
         elif DEBUG and not DOCKER:
             super().__init__(_env_file=[BASE_DIR / '../.envs/.local/.api',
+                                        BASE_DIR / '../.envs/.local/.elk/.logstash',
                                         BASE_DIR / '../.envs/.local/.clickhouse',
                                         BASE_DIR / '../.envs/.local/.mongo',
                                         BASE_DIR / '../.envs/.local/.kafka/.broker',
                                         BASE_DIR / '../.envs/.local/.redis'])
         else:
             super().__init__(_env_file=[BASE_DIR / '../.envs/.prod/.api',
+                                        BASE_DIR / '../.envs/.prod/.elk/.logstash',
                                         BASE_DIR / '../.envs/.prod/.clickhouse',
                                         BASE_DIR / '../.envs/.prod/.mongo',
                                         BASE_DIR / '../.envs/.prod/.kafka/.broker',

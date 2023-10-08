@@ -1,0 +1,4 @@
+discovery.type=single-node
+xpack.security.enabled=false
+ELASTIC_HOST=elasticsearch
+ELASTIC_PORT=9200
