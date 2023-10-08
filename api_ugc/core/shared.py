@@ -1,8 +1,15 @@
+import logging
 import uuid
 from enum import Enum
 
 import pydantic as pd
 from bson import ObjectId
+
+
+class RequestIdFilter(logging.Filter):
+    def filter(self, record):
+        record.request_id = getattr(record, 'request_id', 'None')
+        return True
 
 
 def custom_dumps(obj: pd.BaseModel | dict) -> dict:

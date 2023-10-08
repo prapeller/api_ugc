@@ -1,10 +1,17 @@
+from pathlib import Path
+
 import fastapi as fa
 from clickhouse_driver.dbapi.cursor import Cursor as CHCursor
 from clickhouse_driver.dbapi.errors import Error as CHError
 
 from core.config import settings
+from core.logger_config import setup_logger
 from db.schemas.user_film_progress import UserFilmProgressReadSerializer
-from services.clickhouse.logger_config import logger
+
+SERVICE_DIR = Path(__file__).resolve().parent
+SERVICE_NAME = SERVICE_DIR.stem
+
+logger = setup_logger(SERVICE_NAME, SERVICE_DIR)
 
 
 class CHRepository():

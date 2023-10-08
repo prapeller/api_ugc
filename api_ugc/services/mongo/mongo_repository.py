@@ -1,5 +1,6 @@
 import datetime as dt
 import uuid
+from pathlib import Path
 
 import fastapi as fa
 import pydantic as pd
@@ -7,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import errors
 
 from core.enums import LikeValueEnum
+from core.logger_config import setup_logger
 from core.shared import custom_dumps
 from db.schemas.comment_likes import (
     CommentLikesCreateSerializer,
@@ -29,7 +31,11 @@ from db.schemas.film_ratings import (
     UserRatingReadSerializer,
 )
 from services.cache.cache import RedisCache
-from services.mongo.logger_config import logger
+
+SERVICE_DIR = Path(__file__).resolve().parent
+SERVICE_NAME = SERVICE_DIR.stem
+
+logger = setup_logger(SERVICE_NAME, SERVICE_DIR)
 
 
 class MongoRepository():
