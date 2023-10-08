@@ -1,28 +1,92 @@
-CLICKHOUSE_DOCKER_COMPOSE_LOCAL := -f ./docker/clickhouse/docker-compose-local.yml
+API_DOCKER_COMPOSE_LOCAL := -f ./docker/api/docker-compose-local.yml
+ELK_DOCKER_COMPOSE_LOCAL := -f ./docker/elk/docker-compose-local.yml
 KAFKA_DOCKER_COMPOSE_LOCAL := -f ./docker/kafka/docker-compose-local.yml
+CLICKHOUSE_DOCKER_COMPOSE_LOCAL := -f ./docker/clickhouse/docker-compose-local.yml
 MONGO_DOCKER_COMPOSE_LOCAL := -f ./docker/mongo/docker-compose-local.yml
 MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL := -f ./docker/mongo_cluster/docker-compose-local.yml
-API_DOCKER_COMPOSE_LOCAL := -f ./docker/api/docker-compose-local.yml
 
 
 build-loc:
-	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
-	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
-	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	@docker network create shared_network || true
 	docker-compose $(API_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
-
-down-loc:
-	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) down
-	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) down
-	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) down
-	docker-compose $(API_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
 
 build-with-mongo-cluster-loc:
 	@docker network create shared_network || true
-	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
-	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
-	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
 	docker-compose $(API_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans
+
+down-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) down
+	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) down
+
+down-v-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) down -v
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) down -v
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) down -v
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) down -v
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) down -v
+	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) down -v
+	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) down -v
+
+check-config:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) config
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) config
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) config
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) config
+	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) config
+	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) config
+	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) config
+
+
+
+api-build-loc:
+	@docker network create shared_network || true
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
+
+api-down-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) down
+
+api-down-v-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) down -v
+
+api-pipinstall-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) -p api_ugc run --rm api_ugc pip install -r requirements/local.txt
+
+api-check-logs-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) logs -t api_ugc
+
+api-etl-kafka-clickhouse-build-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps etl_kafka_postgres_ugc
+
+api-etl-kafka-clickhouse-down-loc:
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) etl_kafka_postgres_ugc down
+
+
+
+
+elk-build-loc:
+	@docker network create shared_network || true
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
+
+elk-down-loc:
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) down
+
+elk-down-v-loc:
+	docker-compose $(ELK_DOCKER_COMPOSE_LOCAL) down -v
+
+
 
 clickhouse-build-loc:
 	@docker network create shared_network || true
@@ -34,13 +98,35 @@ clickhouse-down-loc:
 clickhouse-down-v-loc:
 	docker-compose $(CLICKHOUSE_DOCKER_COMPOSE_LOCAL) down -v
 
+
+
 kafka-build-loc:
 	@docker network create shared_network || true
 	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
 
+kafka-down-loc:
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) down
+
+kafka-down-v-loc:
+	docker-compose $(KAFKA_DOCKER_COMPOSE_LOCAL) down -v
+
+
+
 mongo-build-loc:
 	@docker network create shared_network || true
 	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
+
+mongo-down-loc:
+	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) down
+
+mongo-down-v-loc:
+	docker-compose $(MONGO_DOCKER_COMPOSE_LOCAL) down -v
+
+mongo-inspect-collections:
+	@echo "Inspecting MongoDB Collections..."
+	docker exec -it mongo_ugc mongosh -f /list_collections.js
+
+
 
 mongo-cluster-build-loc:
 	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
@@ -90,40 +176,11 @@ mongo-cluster-inspect-rs2-status:
 mongo-cluster-inspect-mongos-status:
 	docker exec -it mongos_1 bash -c 'echo "sh.status()" | mongosh'
 
-
-mongo-inspect-collections:
-	@echo "Inspecting MongoDB Collections..."
-	docker exec -it mongo_ugc mongosh -f /list_collections.js
-
 mongo-cluster-down-loc:
 	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) down
 
 mongo-cluster-down-v-loc:
 	docker-compose $(MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL) down -v
-
-
-api-build-loc:
-	@docker network create shared_network || true
-	docker-compose $(API_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
-
-
-api-check-config:
-	docker-compose -f docker-compose-prod.yml -p api_ugc config
-
-api-check-config-loc:
-	docker-compose -f docker-compose-local.yml -p api_ugc config
-
-api-pipinstall:
-	docker-compose -f docker-compose-prod.yml -p api_ugc run --rm api_ugc pip install -r requirements/prod.txt
-
-api-pipinstall-loc:
-	docker-compose -f docker-compose-local.yml -p api_ugc run --rm api_ugc pip install -r requirements/local.txt
-
-api-check-logs:
-	docker-compose -f docker-compose-prod.yml -p api_ugc logs
-
-api-check-logs-loc:
-	docker-compose -f docker-compose-local.yml -p api_ugc logs
 
 
 
@@ -132,13 +189,8 @@ POSTGRES_DOCKER_COMPOSE_LOCAL := -f ./docker/postgres/docker-compose-local.yml
 postgres-build-loc:
 	docker-compose $(POSTGRES_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
 
-
 postgres-down-loc:
 	docker-compose $(POSTGRES_DOCKER_COMPOSE_LOCAL) down
 
-
-etl-kafka-clickhouse-build-loc:
-	docker-compose $(API_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps etl_kafka_postgres_ugc
-
-etl-kafka-clickhouse-down-loc:
-	docker-compose $(API_DOCKER_COMPOSE_LOCAL) etl_kafka_postgres_ugc down
+postgres-down-v-loc:
+	docker-compose $(POSTGRES_DOCKER_COMPOSE_LOCAL) down -v
