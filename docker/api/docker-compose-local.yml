@@ -81,6 +81,11 @@ services:
       - ../../.envs/.docker-compose-local/.api
     ports:
       - "82:82"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: nginx
     networks:
       - local_network_ugc
       - shared_network
