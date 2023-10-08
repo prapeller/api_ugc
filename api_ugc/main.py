@@ -1,17 +1,44 @@
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 import fastapi as fa
+import sentry_sdk
 import uvicorn
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
 
 import core.dependencies
-from api.v1.user_film_progress import router as user_film_progress_router
+from api.v1.comment_likes import router as comment_likes_router
+from api.v1.film_bookmarks import router as film_bookmarks_router
 from api.v1.film_comments import router as film_coments_router
 from api.v1.film_ratings import router as film_ratings_router
-from api.v1.film_bookmarks import router as film_bookmarks_router
-from api.v1.comment_likes import router as comment_likes_router
+from api.v1.user_film_progress import router as user_film_progress_router
 from core.config import settings
+from core.logger_config import setup_logger
+
+SERVICE_DIR = Path(__file__).resolve().parent
+SERVICE_NAME = SERVICE_DIR.stem
+
+logger = setup_logger(SERVICE_NAME, SERVICE_DIR)
+
+
+@asynccontextmanager
+async def lifespan(app: fa.FastAPI):
+    # startup
+    core.dependencies.redis = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+    yield
+    # shutdown
+    await core.dependencies.redis.close()
+
+
+sentry_sdk.init(
+    dsn=settings.SENTRY_DSN,
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
 
 app = fa.FastAPI(
+    lifespan=lifespan,
     title=settings.PROJECT_NAME,
     docs_url=f'/{settings.DOCS_URL}',
     openapi_url='/api/openapi.json',
@@ -19,14 +46,10 @@ app = fa.FastAPI(
 )
 
 
-@app.on_event('startup')
-async def startup():
-    core.dependencies.redis = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-
-
-@app.on_event('shutdown')
-async def shutdown():
-    await core.dependencies.redis.close()
+@app.middleware('http')
+async def log_request_id(request: fa.Request, call_next):
+    logger.info('Request processed', extra={'request_id': request.headers.get('X-Request-Id', 'None')})
+    return await call_next(request)
 
 
 v1_router_auth = fa.APIRouter()
