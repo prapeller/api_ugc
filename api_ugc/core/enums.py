@@ -11,6 +11,7 @@ class LikeValueEnum(int, Enum):
     def __repr__(self):
         return str(self.value)
 
+
 class EnvEnum(str, Enum):
     local = 'local'
     docker_compose_local = 'docker-compose-local'
@@ -26,3 +27,10 @@ class EnvEnum(str, Enum):
 class ResponseDetailEnum(str, Enum):
     ok = 'ok'
     unauthorized = 'Unauthorized for this action.'
+
+
+class MethodsEnum(str, Enum):
+    get = 'get'
+    post = 'post'
+    put = 'put'
+    delete = 'delete'

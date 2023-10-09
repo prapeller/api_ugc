@@ -85,7 +85,7 @@ services:
       driver: gelf
       options:
         gelf-address: udp://127.0.0.1:5044
-        tag: nginx
+        tag: nginx_ugc
     networks:
       - local_network_ugc
       - shared_network

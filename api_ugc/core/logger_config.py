@@ -2,8 +2,10 @@ import logging
 from pathlib import Path
 
 import logstash
+
 from core.config import settings
 from core.shared import RequestIdFilter
+
 
 def setup_logger(service_name: str, service_dir: Path):
     logger = logging.getLogger(name=service_name)
@@ -19,7 +21,8 @@ def setup_logger(service_name: str, service_dir: Path):
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
-    logger.addHandler(logstash.LogstashHandler(settings.LOGSTASH_HOST, settings.LOGSTASH_PORT, version=1))
+    logger.addHandler(
+        logstash.LogstashHandler(settings.LOGSTASH_HOST, settings.LOGSTASH_PORT, version=1, tags=['api_ugc']))
     logger.addFilter(RequestIdFilter())
 
     return logger

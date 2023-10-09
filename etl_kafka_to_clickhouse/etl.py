@@ -12,7 +12,8 @@ from logger_config import logger
 
 BATCH_SIZE = 5
 BATCH_FILE_PATH = 'batch.tsv'
-insert_query_prefix = f"INSERT INTO {settings.USER_FILM_PROGRESS_TABLE} (user_uuid, film_uuid, current_time_sec, total_time_sec) VALUES \n"
+insert_query_prefix = (f"INSERT INTO {settings.USER_FILM_PROGRESS_TABLE} "
+                       f"(user_uuid, film_uuid, current_time_sec, total_time_sec) VALUES \n")
 batch_counter = 0
 
 

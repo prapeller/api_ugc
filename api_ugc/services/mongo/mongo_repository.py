@@ -93,9 +93,9 @@ class MongoRepository():
             {"film_comments.$": 1})
         if res is not None and 'film_comments' in res:
             return FilmCommentReadSerializer(**res["film_comments"][0])
-        else:
-            raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                   detail=f'comment not found, {comment_uuid=:}')
+
+        raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                               detail=f'comment not found, {comment_uuid=:}')
 
     async def film_comments_update(self, comment_uuid: pd.UUID4,
                                    comment_ser: FilmCommentUpdateSerializer) -> FilmCommentReadSerializer | None:
@@ -106,6 +106,7 @@ class MongoRepository():
 
         if res.modified_count > 0:
             return await self.film_comments_get(comment_uuid)
+
         raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST,
                                detail=f"can't update comment by {comment_uuid=:}")
 
@@ -121,9 +122,9 @@ class MongoRepository():
                         await self.db.comment_likes.delete_one({"comment_uuid": str(comment_uuid)})
                         await session.commit_transaction()
                         return {'detail': 'ok'}
-                    else:
-                        raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                               detail=f'comment not found, {comment_uuid=:}')
+
+                    raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                                           detail=f'comment not found, {comment_uuid=:}')
 
             except errors.PyMongoError as e:
                 detail = f"can't delete comment by {comment_uuid=:}: {e}"
@@ -140,16 +141,16 @@ class MongoRepository():
         )
         if res is not None and 'likes' in res:
             return LikeReadSerializer(**res["likes"][0])
-        else:
-            return None
+
+        return None
 
     async def comment_likes_list(self, comment_uuid: pd.UUID4) -> CommentLikesReadSerializer:
         res = await self.db.comment_likes.find_one({'comment_uuid': str(comment_uuid)})
         if res is not None:
             return CommentLikesReadSerializer(**res)
-        else:
-            raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                   detail=f"comment_likes not found, {comment_uuid=:}")
+
+        raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                               detail=f"comment_likes not found, {comment_uuid=:}")
 
     async def comment_likes_update(self, comment_uuid: pd.UUID4, comment_likes_ser: CommentLikesUpdateSerializer):
         res = await self.db.comment_likes.update_one(
@@ -159,9 +160,8 @@ class MongoRepository():
         if res.modified_count > 0:
             return await self.comment_likes_list(comment_uuid)
 
-        else:
-            raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST,
-                                   detail=f"can't update comment_likes, {comment_uuid=:}")
+        raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST,
+                               detail=f"can't update comment_likes, {comment_uuid=:}")
 
     async def comment_like_update(self, comment_uuid: pd.UUID4, user_uuid: pd.UUID4, like_ser: LikeCreateSerializer):
         """
@@ -239,9 +239,9 @@ class MongoRepository():
                     await self.cache.set(f'film_ratings_{film_uuid=:}', res)
                     return FilmRatingsReadSerializer(film_uuid=film_uuid, avg_rating=res.get('avg_rating'),
                                                      user_ratings=res.get('user_ratings'))
-                else:
-                    raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                           detail=f'film_ratings not found, {film_uuid=:}')
+
+                raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                                       detail=f'film_ratings not found, {film_uuid=:}')
 
         except errors.PyMongoError as e:
             detail = f"can't list film_ratings, {film_uuid=:}: {e}"
@@ -263,9 +263,8 @@ class MongoRepository():
                 if user_ratings:
                     return FilmRatingReadSerializer(**user_ratings[0])
 
-            else:
-                raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                       detail=f'film_rating not found, {user_uuid=:}, {film_uuid=:}')
+            raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
+                                   detail=f'film_rating not found, {user_uuid=:}, {film_uuid=:}')
 
         except errors.PyMongoError as e:
             detail = f"can't get user rating, {user_uuid=:} {film_uuid=:}: {e}"
@@ -429,9 +428,10 @@ class MongoRepository():
             )
             if result.modified_count > 0:
                 return {'detail': 'ok'}
-            else:
-                detail = f"can't delete film_bookmark, {user_uuid=:}, {film_uuid=:}"
-                raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST, detail=detail)
+
+            detail = f"can't delete film_bookmark, {user_uuid=:}, {film_uuid=:}"
+            raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST, detail=detail)
+
         except errors.PyMongoError as e:
             detail = f"can't delete film_bookmark, {user_uuid=:}, {film_uuid=:}: {e}"
             logger.error(detail)
