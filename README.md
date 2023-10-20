@@ -17,7 +17,6 @@ https://github.com/prapeller/Auth_sprint_2
 3) All these technologies better to use in separate service, rather than to paste them to already overloaded with technologies Search service.
 
 #### Deploy mongo vs postgres experiment for reading speed comparison:
-- > cp .envs/.example .envs/.docker-compose-local
 - > cd mongo_vs_postgres
 - > python3.11 -m venv venv
 - > source venv/bin/activate
