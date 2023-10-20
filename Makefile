@@ -1,9 +1,9 @@
-API_DOCKER_COMPOSE_LOCAL := -f ./docker/api/docker-compose-local.yml
-ELK_DOCKER_COMPOSE_LOCAL := -f ./docker/elk/docker-compose-local.yml
-KAFKA_DOCKER_COMPOSE_LOCAL := -f ./docker/kafka/docker-compose-local.yml
-CLICKHOUSE_DOCKER_COMPOSE_LOCAL := -f ./docker/clickhouse/docker-compose-local.yml
-MONGO_DOCKER_COMPOSE_LOCAL := -f ./docker/mongo/docker-compose-local.yml
-MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL := -f ./docker/mongo_cluster/docker-compose-local.yml
+API_DOCKER_COMPOSE_LOCAL := -p api_ugc -f ./docker/api/docker-compose-local.yml
+ELK_DOCKER_COMPOSE_LOCAL := -p elk_ugc -f ./docker/elk/docker-compose-local.yml
+KAFKA_DOCKER_COMPOSE_LOCAL := -p kafka_ugc -f ./docker/kafka/docker-compose-local.yml
+CLICKHOUSE_DOCKER_COMPOSE_LOCAL := -p clickhouse_ugc -f ./docker/clickhouse/docker-compose-local.yml
+MONGO_DOCKER_COMPOSE_LOCAL := -p mongo_ugc -f ./docker/mongo/docker-compose-local.yml
+MONGO_CLUSTER_DOCKER_COMPOSE_LOCAL := -p mongo_cluster_ugc -f ./docker/mongo_cluster/docker-compose-local.yml
 
 
 build-loc:
@@ -62,7 +62,7 @@ api-down-v-loc:
 	docker-compose $(API_DOCKER_COMPOSE_LOCAL) down -v
 
 api-pipinstall-loc:
-	docker-compose $(API_DOCKER_COMPOSE_LOCAL) -p api_ugc run --rm api_ugc pip install -r requirements/local.txt
+	docker-compose $(API_DOCKER_COMPOSE_LOCAL) run --rm api_ugc pip install -r requirements/local.txt
 
 api-check-logs-loc:
 	docker-compose $(API_DOCKER_COMPOSE_LOCAL) logs -t api_ugc
@@ -184,7 +184,7 @@ mongo-cluster-down-v-loc:
 
 
 
-POSTGRES_DOCKER_COMPOSE_LOCAL := -f ./docker/postgres/docker-compose-local.yml
+POSTGRES_DOCKER_COMPOSE_LOCAL := -p postgres_ugc -f ./docker/postgres/docker-compose-local.yml
 
 postgres-build-loc:
 	docker-compose $(POSTGRES_DOCKER_COMPOSE_LOCAL) up --build -d --remove-orphans --no-deps
