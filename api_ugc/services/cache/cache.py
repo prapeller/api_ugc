@@ -35,7 +35,7 @@ class RedisCache(Cache):
         data: dict = custom_dumps(data)
         data: bytes = orjson.dumps(data)
         try:
-            await self.redis.set(cache_key, data, config.REDIS_CACHE_EXPIRE_IN_SECONDS)
+            await self.redis.set(cache_key, data, config.REDIS_CACHE_EXPIRES_IN_SECONDS)
             logger.debug('set by {}, {}'.format(cache_key, data))
         except (TypeError, RedisError) as e:
             logger.error("can't set by {}, {}".format(cache_key, e))
