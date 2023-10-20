@@ -1,14 +1,15 @@
 create table if not exists film
 (
     id           serial primary key,
+    uuid         uuid unique             not null,
     created_at   timestamp default now() not null,
     updated_at   timestamp,
-    uuid         uuid unique             not null,
     title        varchar                 not null,
-    description  varchar,
+    description  text,
     release_date date,
     file_path    varchar,
-    "type"       varchar(10)
+    "type"       varchar(10),
+    imdb_rating  numeric
 );
 
 create index idx_film_title on film (title);
