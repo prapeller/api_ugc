@@ -26,7 +26,8 @@ async def film_bookmarks_create(
         mongo_repo: MongoRepository = fa.Depends(mongo_repo_dependency),
 ):
     """create film_bookmarks of current user"""
-    return await mongo_repo.bookmarks_create_by_user(user_uuid, bookmark_ser)
+    bookmark = await mongo_repo.bookmarks_create_by_user(user_uuid, bookmark_ser)
+    return bookmark
 
 
 @router.delete('/{film_uuid}')
