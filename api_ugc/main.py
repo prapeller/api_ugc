@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 import fastapi as fa
+import sentry_sdk
 import uvicorn
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
@@ -13,12 +14,7 @@ from api.v1.auth.film_ratings import router as film_ratings_router
 from api.v1.auth.user_film_progress import router as user_film_progress_router
 from api.v1.public.film_bookmarks import router as film_bookmarks_router_public
 from core.config import settings
-from core.logger_config import setup_logger
-
-SERVICE_DIR = Path(__file__).resolve().parent
-SERVICE_NAME = SERVICE_DIR.stem
-
-logger = setup_logger(SERVICE_NAME, SERVICE_DIR)
+from core.logger_config import logger
 
 
 @asynccontextmanager
