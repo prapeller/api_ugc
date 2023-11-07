@@ -24,4 +24,4 @@ class BookmarkSerializer(pd.BaseModel):
 
 class UserBookmarksSerializer(pd.BaseModel):
     user_uuid: pd.UUID4
-    film_bookmarks: list[BookmarkSerializer]
+    film_bookmarks: list[BookmarkSerializer] = []
