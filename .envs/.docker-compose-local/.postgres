@@ -1,5 +1,5 @@
-POSTGRES_HOST=postgres_ugc
+POSTGRES_HOST=postgres_search
 POSTGRES_PORT=5432
-POSTGRES_USER=postgres_user
-POSTGRES_DB=postgres_db
-POSTGRES_PASSWORD=postgres_password
+POSTGRES_USER=movies
+POSTGRES_DB=movies
+POSTGRES_PASSWORD=movies
