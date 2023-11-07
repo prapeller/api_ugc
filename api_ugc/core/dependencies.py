@@ -1,10 +1,10 @@
 import json
+import uuid
 from typing import Generator
 
 import clickhouse_driver
 import fastapi as fa
 import httpx
-import pydantic as pd
 from aiokafka import AIOKafkaProducer
 from clickhouse_driver.dbapi.cursor import Cursor as CHCursor
 from fastapi import Depends
@@ -45,8 +45,7 @@ async def verified_access_token_dependency(
     }
     data = {
         'useragent': request.headers.get("user-agent"),
-        # 'ip': '172.20.0.5',
-        'ip': request.client.host,
+        'ip': request.headers.get('X-Forwarded-For'),
         'access_token': access_token,
     }
     async with httpx.AsyncClient() as client:
@@ -58,9 +57,8 @@ async def verified_access_token_dependency(
 
 async def current_user_uuid_dependency(
         access_token: dict = fa.Depends(verified_access_token_dependency),
-) -> pd.UUID4:
-    # return pd.UUID4('0084ba96-8688-4a1b-b4a2-691c38a99e61')
-    return pd.UUID4(access_token.get('sub'))
+) -> uuid.UUID:
+    return uuid.UUID(access_token.get('sub'))
 
 
 async def kafka_producer_dependency() -> Generator[KafkaProducer, None, None]:
