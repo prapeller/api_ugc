@@ -79,21 +79,17 @@ services:
       - api_ugc
     env_file:
       - ../../.envs/.docker-compose-local/.api
-    ports:
-      - "82:82"
-    logging:
-      driver: gelf
-      options:
-        gelf-address: udp://127.0.0.1:5044
-        tag: nginx_ugc
-    networks:
-      - local_network_ugc
-      - shared_network
+#    logging:
+#      driver: gelf
+#      options:
+#        gelf-address: udp://127.0.0.1:5044
+#        tag: nginx_ugc
     healthcheck:
       test: [ "CMD", "nc", "-z", "nginx_ugc", "82" ]
       interval: 3s
       timeout: 10s
       retries: 3
+    network_mode: host
 
 networks:
   local_network_ugc:
