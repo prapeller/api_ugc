@@ -69,18 +69,27 @@ class MongoRepository():
         session = await self.client.start_session()
         try:
             async with session.start_transaction():
-                res1 = await self.db.film_comments.update_one(
-                    {"film_uuid": str(film_uuid)},
-                    {"$push": {"film_comments": custom_dumps(comment_ser)}}
-                )
-                if res1.modified_count > 0:
+                # Check if a document for the specific film exists
+                doc = await self.db.film_comments.find_one({"film_uuid": str(film_uuid)})
+                if doc:
+                    update_result = await self.db.film_comments.update_one(
+                        {"film_uuid": str(film_uuid)},
+                        {"$push": {"film_comments": custom_dumps(comment_ser)}}
+                    )
+                else:
+                    update_result = await self.db.film_comments.insert_one({
+                        "film_uuid": str(film_uuid),
+                        "film_comments": [custom_dumps(comment_ser)]
+                    })
+
+                if update_result.modified_count > 0 or update_result.upserted_id is not None:
                     await self.db.comment_likes.insert_one(
                         custom_dumps(CommentLikesCreateSerializer(comment_uuid=comment_uuid)))
                     session.commit_transaction()
                     session.end_session()
                     return await self.film_comments_get(comment_uuid)
         except errors.PyMongoError as e:
-            detail = f"can't create comment to {film_uuid=:}, {user_uuid=:}: {e}"
+            detail = f"can't create comment for {film_uuid=}, {user_uuid=}: {e}"
             logger.error(detail)
             session.abort_transaction()
             session.end_session()
@@ -365,13 +374,10 @@ class MongoRepository():
             await session.abort_transaction()
             raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST, detail=detail)
 
-    async def bookmarks_list_by_user(self, user_uuid) -> UserBookmarksSerializer:
+    async def bookmarks_list_by_user(self, user_uuid: pd.UUID4) -> UserBookmarksSerializer:
         try:
             res = await self.db.user_ratings_bookmarks.find_one({'user_uuid': str(user_uuid)})
-            if res is None:
-                raise fa.HTTPException(status_code=fa.status.HTTP_404_NOT_FOUND,
-                                       detail=f'film_bookmarks not found, {user_uuid=:}')
-            film_bookmarks = res.get('film_bookmarks', [])
+            film_bookmarks = res.get('film_bookmarks', []) if res is not None else []
             return UserBookmarksSerializer(user_uuid=user_uuid, film_bookmarks=film_bookmarks)
 
         except errors.PyMongoError as e:
@@ -379,7 +385,7 @@ class MongoRepository():
             logger.error(detail)
             raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST, detail=detail)
 
-    async def bookmarks_create_by_user(self, user_uuid, bookmark_ser) -> BookmarkSerializer:
+    async def bookmarks_create_by_user(self, user_uuid: pd.UUID4, bookmark_ser) -> BookmarkSerializer:
         try:
             my_user_bookmarks: UserBookmarksSerializer = await self.bookmarks_list_by_user(user_uuid)
             if any([b.film_uuid == bookmark_ser.film_uuid for b in my_user_bookmarks.film_bookmarks]):
@@ -387,11 +393,23 @@ class MongoRepository():
                 raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST,
                                        detail=detail)
 
-            res = await self.db.user_ratings_bookmarks.update_one(
-                {'user_uuid': str(user_uuid)},
-                {"$push": {"film_bookmarks": custom_dumps(bookmark_ser)}})
-            if res.modified_count > 0:
-                return bookmark_ser
+            user_doc = await self.db.user_ratings_bookmarks.find_one({'user_uuid': str(user_uuid)})
+            if user_doc:
+                res = await self.db.user_ratings_bookmarks.update_one(
+                    {'user_uuid': str(user_uuid)},
+                    {"$push": {"film_bookmarks": custom_dumps(bookmark_ser)}})
+                if res.modified_count == 0:
+                    detail = f"Could not add film_bookmark, {user_uuid=:}, {bookmark_ser=:}"
+                    raise fa.HTTPException(status_code=fa.status.HTTP_400_BAD_REQUEST, detail=detail)
+            else:
+                # If there's no document for the user, create one
+                new_user_bookmarks = {
+                    'user_uuid': str(user_uuid),
+                    'film_bookmarks': [custom_dumps(bookmark_ser)]
+                }
+                await self.db.user_ratings_bookmarks.insert_one(new_user_bookmarks)
+
+            return bookmark_ser
 
         except errors.PyMongoError as e:
             detail = f"can't create film_bookmark, {user_uuid=:}, {bookmark_ser}: {e}"
