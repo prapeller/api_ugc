@@ -38,9 +38,9 @@ services:
       - ../../.envs/.docker-compose-local/.kafka/.broker
       - ../../.envs/.docker-compose-local/.redis
     ports:
-      - "8084:8084"
+      - "8082:8082"
     expose:
-      - "8084"
+      - "8082"
     depends_on:
       redis_ugc:
         condition: service_healthy
