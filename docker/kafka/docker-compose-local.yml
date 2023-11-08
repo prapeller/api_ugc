@@ -34,7 +34,7 @@ services:
     depends_on:
       - broker
     ports:
-      - "8081:8081"
+      - "8079:8079"
     env_file:
       - ../../.envs/.docker-compose-local/.kafka/.schema-registry
     networks:
@@ -48,7 +48,7 @@ services:
       - broker
       - schema-registry
     ports:
-      - "8083:8083"
+      - "8078:8078"
     env_file:
       - ../../.envs/.docker-compose-local/.kafka/.connect
     networks:
@@ -78,7 +78,7 @@ services:
       - broker
       - connect
     ports:
-      - "8088:8088"
+      - "8076:8076"
     env_file:
       - ../../.envs/.docker-compose-local/.kafka/.ksqldb-server
     networks:
@@ -109,7 +109,7 @@ services:
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                        cub kafka-ready -b broker:29092 1 40 && \
                        echo Waiting for Confluent Schema Registry to be ready... && \
-                       cub sr-ready schema-registry 8081 40 && \
+                       cub sr-ready schema-registry 8079 40 && \
                        echo Waiting a few seconds for topic creation to finish... && \
                        sleep 11 && \
                        tail -f /dev/null'"
@@ -125,7 +125,7 @@ services:
       - broker
       - schema-registry
     ports:
-      - 8082:8082
+      - 8077:8077
     container_name: rest-proxy
     env_file:
       - ../../.envs/.docker-compose-local/.kafka/.rest-proxy
