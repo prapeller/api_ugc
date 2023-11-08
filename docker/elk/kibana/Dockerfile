@@ -1,1 +1,1 @@
-FROM docker.elastic.co/kibana/kibana:7.10.2
+FROM prapeller/kibana:7.10.2
